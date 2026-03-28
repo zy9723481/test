@@ -504,4 +504,5 @@ def delete_order(order_id):
 from config import HOST, PORT
 
 if __name__ == '__main__':
-    app.run(debug=True, host=HOST, port=PORT)
+    # 一定要 0.0.0.0，外网才能访问
+    app.run(debug=True, host='0.0.0.0', port=5000)
