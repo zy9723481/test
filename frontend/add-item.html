@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增项目 - 水暖管件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1rem;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .save-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-button {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>新增项目</h1>
+    </div>
+    
+    <div class="content">
+        <div class="form-container">
+            <form id="add-item-form">
+                <div class="form-group">
+                    <label for="item-name">名称</label>
+                    <input type="text" id="item-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-material">材质</label>
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" id="item-material" name="material" required style="flex: 3;">
+                        <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+                            <input type="checkbox" id="material-checkbox" style="margin-right: 0.5rem;">
+                            <input type="text" value="无需材质" disabled style="border: none; background: transparent; color: #666;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="item-purchase-price">进价</label>
+                    <input type="number" id="item-purchase-price" name="purchase_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-selling-price">销售价</label>
+                    <input type="number" id="item-selling-price" name="selling_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-stock">库存</label>
+                    <input type="number" id="item-stock" name="stock">
+                </div>
+                <div class="form-group">
+                    <label for="item-note">备注</label>
+                    <textarea id="item-note" name="note"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="save-button">保存</button>
+                    <button type="button" class="cancel-button" onclick="window.location.href='main.html?tab=items'">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // API基础URL配置
+        const API_BASE_URL = 'http://localhost:5000'; // 指向后端服务地址
+        
+        // 材质勾选功能
+        document.getElementById('material-checkbox').addEventListener('change', function() {
+            const materialInput = document.getElementById('item-material');
+            if (this.checked) {
+                materialInput.required = false;
+                materialInput.disabled = true;
+                materialInput.value = '';
+            } else {
+                materialInput.required = true;
+                materialInput.disabled = false;
+            }
+        });
+        
+        // 添加提示元素
+        function showMessage(message, isSuccess = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSuccess ? 'success' : 'error'}`;
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '1rem 2rem';
+            messageDiv.style.borderRadius = '4px';
+            messageDiv.style.color = 'white';
+            messageDiv.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+            messageDiv.style.transition = 'all 0.3s ease';
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+        
+        document.getElementById('add-item-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const itemData = {
+                name: formData.get('name'),
+                purchase_price: formData.get('purchase_price'),
+                selling_price: formData.get('selling_price'),
+                stock: formData.get('stock'),
+                note: formData.get('note'),
+                material: formData.get('material') || null
+            };
+            
+            fetch(`${API_BASE_URL}/api/items`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(itemData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('项目添加成功');
+                    setTimeout(() => {
+                        window.location.href = 'main.html?tab=items';
+                    }, 1000);
+                } else {
+                    if (data.message === '项目名称已存在') {
+                        // 跳转到项目管理页面并自动搜索
+                        const name = document.getElementById('item-name').value;
+                        window.location.href = `main.html?tab=items&search=${encodeURIComponent(name)}`;
+                    } else {
+                        showMessage('添加失败: ' + data.message, false);
+                    }
+                }
+            })
+            .catch(error => {
+                showMessage('网络错误，请重试', false);
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主页面 - 水暖管件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1rem;
+        }
+        
+        .tab-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .tab-button.active {
+            background-color: white;
+            border-bottom: 2px solid #4CAF50;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .tab-content {
+            padding: 1.5rem;
+            min-height: 400px;
+        }
+        
+        .tab-content.hidden {
+            display: none;
+        }
+        
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+        }
+        
+        /* 项目管理样式 */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+        }
+        
+        button {
+            padding: 0.8rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        /* 搜索框样式 */
+        .search-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-container input {
+            flex: 1;
+        }
+        
+        .search-container button {
+            flex-shrink: 0;
+        }
+        
+        .item-list {
+            margin-top: 1.5rem;
+        }
+        
+        .item-card {
+            background-color: #f9f9f9;
+            padding: 1.2rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4CAF50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .item-card h3 {
+            margin-bottom: 0.8rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .item-card p {
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .item-card .card-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .item-card .card-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        /* 订单管理样式 */
+        .order-form {
+            margin-bottom: 1rem;
+        }
+        
+        .order-items {
+            margin: 1rem 0;
+        }
+        
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .order-item input {
+            flex: 1;
+        }
+        
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            text-align: right;
+            color: #333;
+        }
+        
+        /* 无结果提示 */
+        .no-results {
+            text-align: center;
+            color: #999;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .tab-content {
+                padding: 1rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>水暖管件管理系统</h1>
+    </div>
+    
+    <div class="content">
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="home">主页</button>
+                <button class="tab-button" data-tab="items">项目管理</button>
+                <button class="tab-button" data-tab="orders">订单管理</button>
+            </div>
+            
+            <div class="tab-content" id="home-tab">
+                <h2>欢迎使用水暖管件管理系统</h2>
+                <p>这里将显示系统概览和报表信息</p>
+            </div>
+            
+            <div class="tab-content hidden" id="items-tab">
+                
+                <!-- 操作区域 -->
+                <div class="form-group">
+                    <!-- 搜索项目 -->
+                    <div class="search-container">
+                        <input type="text" id="item-search" placeholder="输入项目名称进行查询">
+                        <button id="search-button">搜索</button>
+                    </div>
+                    
+                    <!-- 新增项目按钮 -->
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <button onclick="window.location.href='add-item.html'" style="flex: 1;">新增项目</button>
+                    </div>
+                </div>
+                
+                <!-- 项目列表 -->
+                <div class="item-list" id="item-list">
+                    <!-- 项目将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            
+            <div class="tab-content hidden" id="orders-tab">
+                
+                <!-- 操作区域 -->
+                <div class="form-group">
+                    <!-- 搜索订单 -->
+                    <div class="search-container">
+                        <input type="text" id="order-search" placeholder="输入客户名称进行查询">
+                    </div>
+                    
+                    <!-- 时间筛选 -->
+                    <div class="date-filter-container" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center;">
+                        <input type="date" id="order-start-date" placeholder="开始日期" style="flex: 1;">
+                        <span style="color: #666;">至</span>
+                        <input type="date" id="order-end-date" placeholder="结束日期" style="flex: 1;">
+                    </div>
+                    
+                    <!-- 搜索和新增按钮 -->
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <button id="order-search-button" style="flex: 1;">搜索</button>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <button onclick="window.location.href='add-order.html'" style="flex: 1;">新增订单</button>
+                    </div>
+
+                </div>
+                
+                <!-- 订单列表 -->
+                <div class="item-list" id="order-list">
+                    <!-- 订单将通过JavaScript动态添加 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2026 水暖管件管理系统</p>
+    </div>
+    
+    <script>
+        // API基础URL配置
+        const API_BASE_URL = 'http://localhost:5000'; // 指向后端服务地址
+        
+        // 根据URL参数切换页签
+        function switchTabByUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            
+            if (tab) {
+                const tabButton = document.querySelector(`.tab-button[data-tab="${tab}"]`);
+                if (tabButton) {
+                    tabButton.click();
+                }
+            }
+        }
+        
+        // 页签切换功能
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                // 移除所有活动状态
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+                
+                // 添加活动状态
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab') + '-tab';
+                document.getElementById(tabId).classList.remove('hidden');
+                
+                // 如果切换到项目页，加载项目列表
+                if (tabId === 'items-tab') {
+                    loadItems();
+                }
+                
+                // 如果切换到订单页，加载订单列表
+                if (tabId === 'orders-tab') {
+                    loadOrders();
+                }
+            });
+        });
+        
+        // 更新页签显示数量
+        function updateTabCounts() {
+            // 获取项目数量
+            fetch(`${API_BASE_URL}/api/items`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const itemCount = data.data.length;
+                        const itemsTab = document.querySelector('.tab-button[data-tab="items"]');
+                        itemsTab.textContent = `项目管理 (${itemCount})`;
+                    }
+                });
+            
+            // 获取订单数量
+            fetch(`${API_BASE_URL}/api/orders`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const orderCount = data.data.length;
+                        const ordersTab = document.querySelector('.tab-button[data-tab="orders"]');
+                        ordersTab.textContent = `订单管理 (${orderCount})`;
+                    }
+                });
+        }
+        
+        // 页面加载时根据URL参数切换页签和执行搜索
+        window.onload = function() {
+            switchTabByUrl();
+            
+            // 检查URL中是否有搜索参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('search');
+            if (search) {
+                const tab = urlParams.get('tab');
+                if (tab === 'items') {
+                    // 执行项目搜索
+                    document.getElementById('item-search').value = search;
+                    loadItems(search);
+                } else if (tab === 'orders') {
+                    // 执行订单搜索
+                    document.getElementById('order-search').value = search;
+                    loadOrders(search);
+                }
+            }
+            
+            // 更新页签数量
+            updateTabCounts();
+        };
+        
+        // 加载项目列表
+        function loadItems(searchTerm = '') {
+            fetch(`${API_BASE_URL}/api/items${searchTerm ? `?name=${searchTerm}` : ''}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const itemList = document.getElementById('item-list');
+                        itemList.innerHTML = '';
+                        
+                        if (data.data.length === 0) {
+                            itemList.innerHTML = '<p class="no-results">没有找到匹配的项目</p>';
+                            return;
+                        }
+                        
+                        data.data.forEach(item => {
+                            const itemCard = document.createElement('div');
+                            itemCard.className = 'item-card';
+                            itemCard.innerHTML = `
+                                <h3>${item.name}</h3>
+                                <p>进价: ¥${item.purchase_price}</p>
+                                <p>销售价: ¥${item.selling_price}</p>
+                                <p>库存: ${item.stock}</p>
+                                <p>材质: ${(item.material && item.material !== 'null') ? item.material : '无'}</p>
+                                <p>备注: ${item.note || '无'}</p>
+                                <div class="card-actions">
+                                    <button onclick="editItem(${item.id})" style="background-color: #2196F3; color: white;">编辑</button>
+                                    <button onclick="deleteItem(${item.id})" style="background-color: #f44336; color: white;">删除</button>
+                                </div>
+                            `;
+                            itemList.appendChild(itemCard);
+                        });
+                    }
+                });
+        }
+        
+        // 编辑项目
+        function editItem(itemId) {
+            window.location.href = 'edit-item.html?id=' + itemId;
+        }
+        
+        // 创建删除确认模态框
+        function createDeleteModal(itemId) {
+            // 检查是否已存在模态框
+            let modal = document.getElementById('delete-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'delete-modal';
+                modal.className = 'modal';
+                modal.style.display = 'none';
+                modal.style.position = 'fixed';
+                modal.style.zIndex = '1000';
+                modal.style.left = '0';
+                modal.style.top = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                
+                const modalContent = document.createElement('div');
+                modalContent.className = 'modal-content';
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.margin = '15% auto';
+                modalContent.style.padding = '2rem';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.width = '90%';
+                modalContent.style.maxWidth = '400px';
+                modalContent.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                
+                const modalMessage = document.createElement('p');
+                modalMessage.id = 'modal-message';
+                modalMessage.textContent = '确定要删除这个项目吗？';
+                
+                const modalButtons = document.createElement('div');
+                modalButtons.className = 'modal-buttons';
+                modalButtons.style.display = 'flex';
+                modalButtons.style.gap = '1rem';
+                modalButtons.style.marginTop = '1.5rem';
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.id = 'modal-cancel';
+                cancelButton.className = 'cancel-button';
+                cancelButton.style.flex = '1';
+                cancelButton.style.padding = '0.8rem';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.fontSize = '1rem';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.style.backgroundColor = '#ccc';
+                cancelButton.style.color = '#333';
+                cancelButton.textContent = '取消';
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.id = 'modal-delete';
+                deleteButton.className = 'delete-button';
+                deleteButton.style.flex = '1';
+                deleteButton.style.padding = '0.8rem';
+                deleteButton.style.border = 'none';
+                deleteButton.style.borderRadius = '4px';
+                deleteButton.style.fontSize = '1rem';
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.style.backgroundColor = '#f44336';
+                deleteButton.style.color = 'white';
+                deleteButton.textContent = '删除';
+                
+                modalButtons.appendChild(cancelButton);
+                modalButtons.appendChild(deleteButton);
+                modalContent.appendChild(modalMessage);
+                modalContent.appendChild(modalButtons);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+            }
+            
+            // 显示模态框
+            modal.style.display = 'block';
+            
+            // 绑定删除按钮事件
+            document.getElementById('modal-delete').onclick = function() {
+                modal.style.display = 'none';
+                performDelete(itemId);
+            };
+            
+            // 绑定取消按钮事件
+            document.getElementById('modal-cancel').onclick = function() {
+                modal.style.display = 'none';
+            };
+            
+            // 点击外部关闭
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+        
+        // 执行删除操作
+        function performDelete(itemId) {
+            fetch(`${API_BASE_URL}/api/items/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 显示删除成功提示
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '项目删除成功';
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.padding = '1rem 2rem';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = 'white';
+                    messageDiv.style.backgroundColor = '#f44336';
+                    messageDiv.style.zIndex = '1000';
+                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    
+                    document.body.appendChild(messageDiv);
+                    
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(messageDiv);
+                        }, 300);
+                    }, 3000);
+                    
+                    // 重新加载项目列表
+                    loadItems();
+                    // 更新页签数量
+                    updateTabCounts();
+                } else {
+                    // 显示错误提示
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '删除失败: ' + data.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.padding = '1rem 2rem';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = 'white';
+                    messageDiv.style.backgroundColor = '#f44336';
+                    messageDiv.style.zIndex = '1000';
+                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    
+                    document.body.appendChild(messageDiv);
+                    
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(messageDiv);
+                        }, 300);
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                // 显示网络错误提示
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '网络错误，请重试';
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.left = '50%';
+                messageDiv.style.transform = 'translateX(-50%)';
+                messageDiv.style.padding = '1rem 2rem';
+                messageDiv.style.borderRadius = '4px';
+                messageDiv.style.color = 'white';
+                messageDiv.style.backgroundColor = '#f44336';
+                messageDiv.style.zIndex = '1000';
+                messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                messageDiv.style.transition = 'all 0.3s ease';
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(messageDiv);
+                    }, 300);
+                }, 3000);
+                
+                console.error('Error:', error);
+            });
+        }
+        
+        // 删除项目
+        function deleteItem(itemId) {
+            createDeleteModal(itemId);
+        }
+        
+        // 项目查询
+        document.getElementById('search-button').addEventListener('click', function() {
+            const searchTerm = document.getElementById('item-search').value;
+            loadItems(searchTerm);
+        });
+        
+        // 回车键搜索
+        document.getElementById('item-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value;
+                loadItems(searchTerm);
+            }
+        });
+        
+        // 加载订单列表
+        function loadOrders(searchTerm = '', startDate = '', endDate = '') {
+            fetch(`${API_BASE_URL}/api/orders`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const orderList = document.getElementById('order-list');
+                        orderList.innerHTML = '';
+                        
+                        let filteredOrders = data.data;
+                        
+                        // 按客户名称筛选
+                        if (searchTerm) {
+                            filteredOrders = filteredOrders.filter(order => 
+                                order.customer_name.toLowerCase().includes(searchTerm.toLowerCase())
+                            );
+                        }
+                        
+                        // 按时间范围筛选
+                        if (startDate) {
+                            const start = new Date(startDate);
+                            start.setHours(0, 0, 0, 0);
+                            filteredOrders = filteredOrders.filter(order => {
+                                const orderDate = new Date(order.created_at);
+                                return orderDate >= start;
+                            });
+                        }
+                        
+                        if (endDate) {
+                            const end = new Date(endDate);
+                            end.setHours(23, 59, 59, 999);
+                            filteredOrders = filteredOrders.filter(order => {
+                                const orderDate = new Date(order.created_at);
+                                return orderDate <= end;
+                            });
+                        }
+                        
+                        if (filteredOrders.length === 0) {
+                            orderList.innerHTML = '<p class="no-results">没有找到匹配的订单</p>';
+                            return;
+                        }
+                        
+                        filteredOrders.forEach(order => {
+                            const orderCard = document.createElement('div');
+                            orderCard.className = 'item-card';
+                            const isPaidStatus = order.is_paid ? '<span style="color: green; font-weight: bold;">已结账</span>' : '<span style="color: red; font-weight: bold;">未结账</span>';
+                            const phoneDisplay = order.phone ? `手机号: ${order.phone}<br>` : '';
+                            orderCard.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <h3>${order.customer_name} - ${new Date(order.created_at).toLocaleString()}</h3>
+                                    <button onclick="deleteOrder(${order.id})" style="background-color: #f44336; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem;">删除</button>
+                                </div>
+                                <p>${phoneDisplay}总金额: ¥${order.total_amount}</p>
+                                <p>总项目数: ${order.item_count}</p>
+                                <p>结账状态: ${isPaidStatus}</p>
+                                <div class="card-actions">
+                                    <button onclick="editOrder(${order.id})">编辑</button>
+                                    <button onclick="viewOrder(${order.id})">查看详情</button>
+                                </div>
+                            `;
+                            orderList.appendChild(orderCard);
+                        });
+                    }
+                });
+        }
+        
+        // 编辑订单
+        function editOrder(orderId) {
+            window.location.href = 'edit-order.html?id=' + orderId;
+        }
+        
+        // 查看订单详情
+        function viewOrder(orderId) {
+            window.location.href = 'view-order.html?id=' + orderId;
+        }
+        
+        // 删除订单
+        function deleteOrder(orderId) {
+            // 创建删除确认模态框
+            let modal = document.getElementById('delete-order-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'delete-order-modal';
+                modal.className = 'modal';
+                modal.style.display = 'none';
+                modal.style.position = 'fixed';
+                modal.style.zIndex = '1000';
+                modal.style.left = '0';
+                modal.style.top = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                
+                const modalContent = document.createElement('div');
+                modalContent.className = 'modal-content';
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.margin = '15% auto';
+                modalContent.style.padding = '2rem';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.width = '90%';
+                modalContent.style.maxWidth = '400px';
+                modalContent.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+                
+                const modalMessage = document.createElement('p');
+                modalMessage.id = 'delete-order-modal-message';
+                modalMessage.textContent = '确定要删除这个订单吗？';
+                
+                const modalButtons = document.createElement('div');
+                modalButtons.className = 'modal-buttons';
+                modalButtons.style.display = 'flex';
+                modalButtons.style.gap = '1rem';
+                modalButtons.style.marginTop = '1.5rem';
+                
+                const cancelButton = document.createElement('button');
+                cancelButton.id = 'delete-order-modal-cancel';
+                cancelButton.className = 'cancel-button';
+                cancelButton.style.flex = '1';
+                cancelButton.style.padding = '0.8rem';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.fontSize = '1rem';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.style.backgroundColor = '#ccc';
+                cancelButton.style.color = '#333';
+                cancelButton.textContent = '取消';
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.id = 'delete-order-modal-delete';
+                deleteButton.className = 'delete-button';
+                deleteButton.style.flex = '1';
+                deleteButton.style.padding = '0.8rem';
+                deleteButton.style.border = 'none';
+                deleteButton.style.borderRadius = '4px';
+                deleteButton.style.fontSize = '1rem';
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.style.backgroundColor = '#f44336';
+                deleteButton.style.color = 'white';
+                deleteButton.textContent = '删除';
+                
+                modalButtons.appendChild(cancelButton);
+                modalButtons.appendChild(deleteButton);
+                modalContent.appendChild(modalMessage);
+                modalContent.appendChild(modalButtons);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+            }
+            
+            // 显示模态框
+            modal.style.display = 'block';
+            
+            // 绑定删除按钮事件
+            document.getElementById('delete-order-modal-delete').onclick = function() {
+                modal.style.display = 'none';
+                performDeleteOrder(orderId);
+            };
+            
+            // 绑定取消按钮事件
+            document.getElementById('delete-order-modal-cancel').onclick = function() {
+                modal.style.display = 'none';
+            };
+            
+            // 点击外部关闭
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+        
+        // 执行删除订单操作
+        function performDeleteOrder(orderId) {
+            fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 显示删除成功提示
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '订单删除成功';
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.padding = '1rem 2rem';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = 'white';
+                    messageDiv.style.backgroundColor = '#f44336';
+                    messageDiv.style.zIndex = '1000';
+                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    
+                    document.body.appendChild(messageDiv);
+                    
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(messageDiv);
+                        }, 300);
+                    }, 3000);
+                    
+                    // 重新加载订单列表
+                    loadOrders();
+                    // 更新页签数量
+                    updateTabCounts();
+                } else {
+                    // 显示错误提示
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = '删除失败: ' + data.message;
+                    messageDiv.style.position = 'fixed';
+                    messageDiv.style.top = '20px';
+                    messageDiv.style.left = '50%';
+                    messageDiv.style.transform = 'translateX(-50%)';
+                    messageDiv.style.padding = '1rem 2rem';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = 'white';
+                    messageDiv.style.backgroundColor = '#f44336';
+                    messageDiv.style.zIndex = '1000';
+                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                    messageDiv.style.transition = 'all 0.3s ease';
+                    
+                    document.body.appendChild(messageDiv);
+                    
+                    setTimeout(() => {
+                        messageDiv.style.opacity = '0';
+                        setTimeout(() => {
+                            document.body.removeChild(messageDiv);
+                        }, 300);
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                // 显示网络错误提示
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message error';
+                messageDiv.textContent = '网络错误，请重试';
+                messageDiv.style.position = 'fixed';
+                messageDiv.style.top = '20px';
+                messageDiv.style.left = '50%';
+                messageDiv.style.transform = 'translateX(-50%)';
+                messageDiv.style.padding = '1rem 2rem';
+                messageDiv.style.borderRadius = '4px';
+                messageDiv.style.color = 'white';
+                messageDiv.style.backgroundColor = '#f44336';
+                messageDiv.style.zIndex = '1000';
+                messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                messageDiv.style.transition = 'all 0.3s ease';
+                
+                document.body.appendChild(messageDiv);
+                
+                setTimeout(() => {
+                    messageDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        document.body.removeChild(messageDiv);
+                    }, 300);
+                }, 3000);
+                
+                console.error('Error:', error);
+            });
+        }
+        
+        // 订单查询
+        document.getElementById('order-search-button').addEventListener('click', function() {
+            const searchTerm = document.getElementById('order-search').value;
+            const startDate = document.getElementById('order-start-date').value;
+            const endDate = document.getElementById('order-end-date').value;
+            loadOrders(searchTerm, startDate, endDate);
+        });
+        
+        // 回车键搜索订单
+        document.getElementById('order-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value;
+                const startDate = document.getElementById('order-start-date').value;
+                const endDate = document.getElementById('order-end-date').value;
+                loadOrders(searchTerm, startDate, endDate);
+            }
+        });
+        
+        // 添加订单项目
+        document.getElementById('order-items').addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-item-button')) {
+                const orderItems = document.getElementById('order-items');
+                const newItem = document.createElement('div');
+                newItem.className = 'order-item';
+                newItem.innerHTML = `
+                    <input type="text" placeholder="项目名称" class="item-name-input">
+                    <input type="number" placeholder="数量" class="item-quantity-input" min="1">
+                    <button type="button" class="remove-item-button">删除</button>
+                `;
+                orderItems.appendChild(newItem);
+            } else if (e.target.classList.contains('remove-item-button')) {
+                e.target.parentElement.remove();
+                updateTotalAmount();
+            }
+        });
+        
+        // 更新总金额
+        function updateTotalAmount() {
+            let total = 0;
+            // 这里需要根据实际项目价格计算总金额
+            document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
+        }
+        
+        // 新增订单表单提交
+        document.getElementById('add-order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const customerName = document.getElementById('order-customer').value;
+            const orderItems = [];
+            
+            // 这里需要收集订单项目信息
+            
+            const orderData = {
+                customer_name: customerName,
+                items: orderItems
+            };
+            
+            fetch(`${API_BASE_URL}/api/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('订单创建成功');
+                    this.reset();
+                    loadOrders();
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

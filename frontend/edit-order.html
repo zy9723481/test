@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑订单 - 水暖管件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1rem;
+            padding-bottom: 120px; /* 为底部固定内容留出空间 */
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        input:disabled, select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+        
+        .order-items {
+            margin: 1rem 0;
+        }
+        
+        .order-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .order-item-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .system-item-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .system-item-checkbox input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .system-item-checkbox label {
+            font-size: 0.8rem;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .icon-button {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .add-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .remove-button {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .select-button {
+            background-color: #FF9800;
+            color: white;
+        }
+        
+        .order-item-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .order-item-row .item-name {
+            flex: 2;
+        }
+        
+        .order-item-row .item-quantity {
+            flex: 1;
+        }
+        
+        .order-item-row button {
+            flex-shrink: 0;
+        }
+        
+        .item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .item-fields-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .item-fields-row input {
+            flex: 1;
+        }
+        
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: right;
+            color: #2c3e50;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .bottom-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .bottom-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .save-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-button {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        .add-item-button {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .remove-item-button {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .select-item-button {
+            background-color: #FF9800;
+            color: white;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .mode-indicator {
+            font-size: 0.85rem;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .field-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>编辑订单</h1>
+    </div>
+    
+    <div class="content">
+        <div class="form-container">
+            <form id="edit-order-form">
+                <input type="hidden" id="order-id" name="id">
+                <div class="form-group">
+                    <label for="order-customer">客户名称</label>
+                    <input type="text" id="order-customer" name="customer_name" required readonly style="background-color: #f5f5f5; cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label for="order-phone">手机号（非必填）</label>
+                    <input type="text" id="order-phone" name="phone" placeholder="请输入客户手机号">
+                </div>
+                
+                <div class="form-group">
+                    <label>订单项目</label>
+                    <div class="order-items" id="order-items">
+                        <!-- 订单项目将通过JavaScript动态加载 -->
+                    </div>
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <button type="button" class="icon-button add-button" onclick="addOrderItem()" title="添加项目">+</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="order-note">订单备注</label>
+                    <textarea id="order-note" name="note" rows="3" placeholder="请输入订单备注"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="order-paid-amount">最终收款金额</label>
+                    <input type="number" id="order-paid-amount" name="paid_amount" step="0.01" placeholder="请输入最终收款金额（为空表示未结账）">
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="bottom-fixed">
+        <div class="bottom-content">
+            <div class="total-amount" id="total-amount">
+                总合计：¥0.00
+            </div>
+            <div class="button-group">
+                <button type="submit" form="edit-order-form" class="save-button">保存</button>
+                <button type="button" class="cancel-button" onclick="window.location.href='main.html?tab=orders'">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API基础URL配置
+        const API_BASE_URL = 'http://localhost:5000'; // 指向后端服务地址
+        
+        let allItems = [];
+        let orderItems = [];
+        let itemIndex = 0;
+        
+        // 获取URL参数
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 加载所有项目列表
+        function loadAllItems() {
+            fetch(`${API_BASE_URL}/api/items`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allItems = data.data;
+                    }
+                });
+        }
+        
+        // 加载订单信息
+        function loadOrder() {
+            const orderId = getUrlParam('id');
+            if (!orderId) {
+                showMessage('订单ID不存在', false);
+                return;
+            }
+            
+            fetch(`${API_BASE_URL}/api/orders/${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const order = data.data;
+                        document.getElementById('order-id').value = order.id;
+                        document.getElementById('order-customer').value = order.customer_name;
+                        document.getElementById('order-phone').value = order.phone || '';
+                        document.getElementById('order-paid-amount').value = order.paid_amount || '';
+                        document.getElementById('order-note').value = order.note || '';
+                        
+                        // 初始化订单项目
+                        order.items.forEach(item => {
+                            addOrderItemWithData(item);
+                        });
+                        
+                        updateTotalAmount();
+                    } else {
+                        showMessage('加载订单失败: ' + data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误，请重试', false);
+                    console.error('Error:', error);
+                });
+        }
+        
+        // 添加订单项目（带数据）
+        function addOrderItemWithData(item) {
+            const orderItemsDiv = document.getElementById('order-items');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'order-item';
+            itemDiv.dataset.index = itemIndex;
+            
+            // 查找对应的系统项目
+            const systemItem = allItems.find(i => i.id === item.item_id);
+            const isSystemItem = !!systemItem;
+            
+            itemDiv.innerHTML = `
+                <div class="order-item-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="order-item-title">项目 ${itemIndex + 1}</span>
+                        <div class="system-item-checkbox">
+                            <input type="checkbox" id="system-item-${itemIndex}" ${isSystemItem ? 'checked' : ''} onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}">系统项目</label>
+                        </div>
+                    </div>
+                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
+                </div>
+                <div class="order-item-row">
+                    <div class="item-name-wrapper" style="flex: 1; position: relative; height: 40px;">
+                        <input type="text" class="item-name" data-index="${itemIndex}" placeholder="项目名称 *" style="width: 100%; height: 40px; display: ${isSystemItem ? 'none' : 'block'}; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;" value="${item.name}">
+                        <select class="item-select" data-index="${itemIndex}" style="display: ${isSystemItem ? 'block' : 'none'}; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
+                        </select>
+                    </div>
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量 *" min="1" value="${item.quantity}" style="flex: 0 0 80px; height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
+                </div>
+                <div class="item-fields" id="item-fields-${itemIndex}">
+                    <div class="item-fields-row">
+                        <div style="flex: 1;">
+                            <div class="field-label">材质</div>
+                            <input type="text" class="item-material" data-index="${itemIndex}" placeholder="材质" value="${item.material || ''}" ${isSystemItem ? 'disabled' : ''}>
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="field-label">进价</div>
+                            <input type="number" class="item-purchase-price" data-index="${itemIndex}" placeholder="进价 *" step="0.01" value="${item.purchase_price || ''}" ${isSystemItem ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                    <div class="item-fields-row">
+                        <div style="flex: 1;">
+                            <div class="field-label">销售价（可编辑）</div>
+                            <input type="number" class="item-selling-price" data-index="${itemIndex}" placeholder="销售价 *" step="0.01" value="${item.price}">
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="field-label">项目备注</div>
+                            <input type="text" class="item-note" data-index="${itemIndex}" placeholder="备注" value="${item.note || ''}" ${isSystemItem ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            orderItemsDiv.appendChild(itemDiv);
+            
+            // 添加事件监听器
+            const inputs = itemDiv.querySelectorAll('input:not([disabled])');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateOrderItem(itemIndex);
+                });
+            });
+            
+            const quantity = itemDiv.querySelector('.item-quantity');
+            quantity.addEventListener('change', function() {
+                updateTotalAmount();
+            });
+            
+            // 初始化orderItem对象
+            const orderItem = {
+                index: itemIndex,
+                id: item.id || null,
+                isSystemItem: isSystemItem,
+                item_id: item.item_id,
+                name: item.name,
+                material: item.material || '',
+                purchase_price: parseFloat(item.purchase_price) || 0,
+                selling_price: parseFloat(item.price),
+                note: item.note || '',
+                quantity: item.quantity,
+                price: parseFloat(item.price)
+            };
+            
+            orderItems.push(orderItem);
+            
+            // 添加系统项目选择事件监听器
+            const select = itemDiv.querySelector('.item-select');
+            const currentIndex = itemIndex; // 保存当前索引
+            
+            // 填充下拉框选项
+            allItems.forEach(i => {
+                const option = document.createElement('option');
+                option.value = i.id;
+                option.setAttribute('data-price', i.selling_price);
+                option.setAttribute('data-purchase-price', i.purchase_price);
+                option.setAttribute('data-material', i.material || '');
+                option.setAttribute('data-note', i.note || '');
+                option.textContent = i.name;
+                if (i.id === item.item_id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', function() {
+                handleSystemItemSelect(this, currentIndex);
+            });
+            
+            // 如果是系统项目，添加销售价变更监听
+            if (isSystemItem) {
+                itemDiv.querySelector('.item-selling-price').addEventListener('change', function() {
+                    orderItem.selling_price = parseFloat(this.value) || 0;
+                    orderItem.price = parseFloat(this.value) || 0;
+                    updateTotalAmount();
+                });
+            }
+            
+            itemIndex++;
+        }
+        
+        // 添加订单项目
+        function addOrderItem() {
+            const orderItemsDiv = document.getElementById('order-items');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'order-item';
+            itemDiv.dataset.index = itemIndex;
+            
+            itemDiv.innerHTML = `
+                <div class="order-item-header">
+                    <span class="order-item-title">项目 ${itemIndex + 1}</span>
+                    <div class="system-item-checkbox">
+                        <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})">
+                        <label for="system-item-${itemIndex}">系统项目</label>
+                    </div>
+                </div>
+                <div class="order-item-row">
+                    <div class="item-name-wrapper" style="flex: 1; position: relative; height: 40px;">
+                        <input type="text" class="item-name" data-index="${itemIndex}" placeholder="项目名称 *" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                        <select class="item-select" data-index="${itemIndex}" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
+                        </select>
+                    </div>
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" value="1" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
+                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
+                </div>
+                <div class="item-fields" id="item-fields-${itemIndex}">
+                    <div class="item-fields-row">
+                        <div style="flex: 1;">
+                            <div class="field-label">材质</div>
+                            <input type="text" class="item-material" data-index="${itemIndex}" placeholder="材质">
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="field-label">进价</div>
+                            <input type="number" class="item-purchase-price" data-index="${itemIndex}" placeholder="进价 *" step="0.01">
+                        </div>
+                    </div>
+                    <div class="item-fields-row">
+                        <div style="flex: 1;">
+                            <div class="field-label">销售价（可编辑）</div>
+                            <input type="number" class="item-selling-price" data-index="${itemIndex}" placeholder="销售价 *" step="0.01">
+                        </div>
+                        <div style="flex: 1;">
+                            <div class="field-label">项目备注</div>
+                            <input type="text" class="item-note" data-index="${itemIndex}" placeholder="备注">
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            orderItemsDiv.appendChild(itemDiv);
+            
+            // 添加事件监听器
+            const inputs = itemDiv.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateOrderItem(itemIndex);
+                });
+            });
+            
+            const quantity = itemDiv.querySelector('.item-quantity');
+            quantity.addEventListener('change', function() {
+                updateTotalAmount();
+            });
+            
+            // 添加下拉框事件监听器（只添加一次）
+            const select = itemDiv.querySelector('.item-select');
+            const currentIndex = itemIndex; // 保存当前索引
+            select.addEventListener('change', function() {
+                handleSystemItemSelect(this, currentIndex);
+            });
+            
+            // 初始化orderItem对象
+            orderItems.push({
+                index: itemIndex,
+                id: null,
+                isSystemItem: false,
+                item_id: null,
+                name: '',
+                material: '',
+                purchase_price: 0,
+                selling_price: 0,
+                note: '',
+                quantity: 1,
+                price: 0
+            });
+            
+            itemIndex++;
+        }
+        
+        // 显示系统项目选择
+        function showItemSelect(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const nameInput = itemDiv.querySelector('.item-name');
+            const selectBtn = itemDiv.querySelector('.select-item-button');
+            const modeIndicator = document.getElementById(`mode-indicator-${index}`);
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            // 创建下拉选择框
+            let select = itemDiv.querySelector('.system-item-select');
+            if (select) {
+                select.remove();
+                selectBtn.textContent = '选择系统项目';
+                modeIndicator.textContent = '自定义模式';
+                orderItem.isSystemItem = false;
+                // 启用所有字段
+                enableAllFields(index);
+                return;
+            }
+            
+            select = document.createElement('select');
+            select.className = 'system-item-select';
+            select.style.cssText = 'flex: 1; margin-top: 0.5rem;';
+            select.innerHTML = `
+                <option value="">-- 请选择系统项目 --</option>
+                ${allItems.map(item => `<option value="${item.id}" data-price="${item.selling_price}" data-purchase-price="${item.purchase_price}" data-material="${item.material || ''}" data-note="${item.note || ''}">${item.name}</option>`).join('')}
+            `;
+            
+            select.addEventListener('change', function() {
+                handleSystemItemSelect(this, index);
+            });
+            
+            nameInput.parentNode.appendChild(select);
+            selectBtn.textContent = '取消选择';
+        }
+        
+        // 处理系统项目选择
+        function handleSystemItemSelect(select, index) {
+            const value = select.value;
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            if (value) {
+                const selectedOption = select.options[select.selectedIndex];
+                const itemId = parseInt(value);
+                const selectedItem = allItems.find(item => item.id === itemId);
+                
+                if (selectedItem) {
+                    orderItem.isSystemItem = true;
+                    orderItem.item_id = itemId;
+                    orderItem.name = selectedItem.name;
+                    orderItem.material = selectedItem.material || '';
+                    orderItem.purchase_price = parseFloat(selectedItem.purchase_price);
+                    orderItem.selling_price = parseFloat(selectedItem.selling_price);
+                    orderItem.note = selectedItem.note || '';
+                    orderItem.price = parseFloat(selectedItem.selling_price);
+                    
+                    // 填充字段
+                    itemDiv.querySelector('.item-name').value = selectedItem.name;
+                    itemDiv.querySelector('.item-material').value = selectedItem.material || '';
+                    itemDiv.querySelector('.item-purchase-price').value = selectedItem.purchase_price;
+                    itemDiv.querySelector('.item-selling-price').value = selectedItem.selling_price;
+                    itemDiv.querySelector('.item-note').value = selectedItem.note || '';
+                    
+                    // 禁用不可编辑字段（材质、进价、备注）
+                    itemDiv.querySelector('.item-material').disabled = true;
+                    itemDiv.querySelector('.item-purchase-price').disabled = true;
+                    itemDiv.querySelector('.item-note').disabled = true;
+                    
+                    // 销售价保持可编辑
+                    itemDiv.querySelector('.item-selling-price').disabled = false;
+                    
+                    // 添加销售价变更监听
+                    itemDiv.querySelector('.item-selling-price').onchange = function() {
+                        orderItem.selling_price = parseFloat(this.value) || 0;
+                        orderItem.price = parseFloat(this.value) || 0;
+                        updateTotalAmount();
+                    };
+                }
+            } else {
+                orderItem.isSystemItem = false;
+                orderItem.item_id = null;
+                enableAllFields(index);
+            }
+            
+            updateTotalAmount();
+        }
+        
+        // 启用所有字段
+        function enableAllFields(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            itemDiv.querySelector('.item-material').disabled = false;
+            itemDiv.querySelector('.item-purchase-price').disabled = false;
+            itemDiv.querySelector('.item-selling-price').disabled = false;
+            itemDiv.querySelector('.item-note').disabled = false;
+        }
+        
+        // 填充系统项目下拉框选项
+        function fillSystemItemOptions(select) {
+            // 清空现有选项
+            select.innerHTML = '';
+            
+            // 添加系统项目选项
+            allItems.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.setAttribute('data-price', item.selling_price);
+                option.setAttribute('data-purchase-price', item.purchase_price);
+                option.setAttribute('data-material', item.material || '');
+                option.setAttribute('data-note', item.note || '');
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+        }
+        
+        // 清空项目录入内容
+        function clearItemFields(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            itemDiv.querySelector('.item-name').value = '';
+            itemDiv.querySelector('.item-material').value = '';
+            itemDiv.querySelector('.item-purchase-price').value = '';
+            itemDiv.querySelector('.item-selling-price').value = '';
+            itemDiv.querySelector('.item-note').value = '';
+            
+            const orderItem = orderItems.find(item => item.index === index);
+            orderItem.name = '';
+            orderItem.material = '';
+            orderItem.purchase_price = 0;
+            orderItem.selling_price = 0;
+            orderItem.note = '';
+            orderItem.price = 0;
+        }
+        
+        // 切换系统项目模式
+        function toggleSystemItem(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const checkbox = document.getElementById(`system-item-${index}`);
+            const nameInput = itemDiv.querySelector('.item-name');
+            const select = itemDiv.querySelector('.item-select');
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            if (checkbox.checked) {
+                // 切换到系统项目模式
+                orderItem.isSystemItem = true;
+                nameInput.style.display = 'none';
+                select.style.display = 'block';
+                
+                // 填充下拉框选项
+                fillSystemItemOptions(select);
+                
+                // 清空已录入的内容
+                clearItemFields(index);
+            } else {
+                // 切换到自定义模式
+                orderItem.isSystemItem = false;
+                nameInput.style.display = 'block';
+                select.style.display = 'none';
+                select.value = '';
+                
+                // 清空系统项目数据
+                orderItem.item_id = null;
+                
+                // 清空已录入的内容
+                clearItemFields(index);
+                
+                // 启用所有字段
+                enableAllFields(index);
+                
+                updateTotalAmount();
+            }
+        }
+        
+        // 更新订单项目
+        function updateOrderItem(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            orderItem.name = itemDiv.querySelector('.item-name').value || '';
+            orderItem.material = itemDiv.querySelector('.item-material').value || '';
+            orderItem.purchase_price = parseFloat(itemDiv.querySelector('.item-purchase-price').value) || 0;
+            orderItem.selling_price = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
+            orderItem.note = itemDiv.querySelector('.item-note').value || '';
+            orderItem.price = orderItem.selling_price;
+            
+            updateTotalAmount();
+        }
+        
+        // 删除订单项目
+        function removeOrderItem(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            if (itemDiv) {
+                const orderItem = orderItems.find(item => item.index === index);
+                if (orderItem && orderItem.id) {
+                    orderItem.is_deleted = true;
+                    itemDiv.style.display = 'none';
+                } else {
+                    itemDiv.remove();
+                    orderItems = orderItems.filter(item => item.index !== index);
+                }
+                updateTotalAmount();
+            }
+        }
+        
+        // 更新总金额
+        function updateTotalAmount() {
+            let total = 0;
+            orderItems.forEach(orderItem => {
+                if (orderItem.is_deleted) return;
+                
+                const itemDiv = document.querySelector(`.order-item[data-index="${orderItem.index}"]`);
+                if (!itemDiv) return;
+                
+                const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
+                orderItem.quantity = quantity;
+                total += orderItem.price * quantity;
+            });
+            document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
+        }
+        
+        // 添加提示元素
+        function showMessage(message, isSuccess = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSuccess ? 'success' : 'error'}`;
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '1rem 2rem';
+            messageDiv.style.borderRadius = '4px';
+            messageDiv.style.color = 'white';
+            messageDiv.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+            messageDiv.style.transition = 'all 0.3s ease';
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+        
+        // 表单提交
+        document.getElementById('edit-order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const orderId = document.getElementById('order-id').value;
+            const customerName = document.getElementById('order-customer').value;
+            const phone = document.getElementById('order-phone').value;
+            const paidAmount = document.getElementById('order-paid-amount').value ? parseFloat(document.getElementById('order-paid-amount').value) : null;
+            const orderNote = document.getElementById('order-note').value;
+            
+            const itemsToUpdate = [];
+            const itemsToDelete = [];
+            const itemsToAdd = [];
+            
+            // 收集订单项目信息
+            orderItems.forEach(orderItem => {
+                if (orderItem.is_deleted && orderItem.id) {
+                    itemsToDelete.push({
+                        id: orderItem.id
+                    });
+                } else if (!orderItem.is_deleted) {
+                    const itemDiv = document.querySelector(`.order-item[data-index="${orderItem.index}"]`);
+                    if (!itemDiv) return;
+                    
+                    const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
+                    
+                    // 重新获取最新值
+                    orderItem.name = itemDiv.querySelector('.item-name').value || '';
+                    orderItem.material = itemDiv.querySelector('.item-material').value || '';
+                    orderItem.purchase_price = parseFloat(itemDiv.querySelector('.item-purchase-price').value) || 0;
+                    orderItem.selling_price = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
+                    orderItem.note = itemDiv.querySelector('.item-note').value || '';
+                    orderItem.price = orderItem.selling_price;
+                    orderItem.quantity = quantity;
+                    
+                    if (!orderItem.name || !orderItem.purchase_price || !orderItem.selling_price) {
+                        showMessage('请填写完整的项目信息（项目名称、进价、销售价为必填）', false);
+                        return;
+                    }
+                    
+                    const itemData = {
+                        name: orderItem.name,
+                        material: orderItem.material,
+                        purchase_price: orderItem.purchase_price,
+                        selling_price: orderItem.selling_price,
+                        stock: 0,
+                        note: orderItem.note,
+                        quantity: quantity,
+                        price: orderItem.price
+                    };
+                    
+                    if (orderItem.isSystemItem && orderItem.item_id) {
+                        itemData.item_id = orderItem.item_id;
+                    }
+                    
+                    if (orderItem.id) {
+                        itemData.id = orderItem.id;
+                        itemsToUpdate.push(itemData);
+                    } else {
+                        itemsToAdd.push(itemData);
+                    }
+                }
+            });
+            
+            const orderData = {
+                customer_name: customerName,
+                phone: phone,
+                paid_amount: paidAmount,
+                note: orderNote,
+                items_to_update: itemsToUpdate,
+                items_to_delete: itemsToDelete,
+                items_to_add: itemsToAdd
+            };
+            
+            fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('订单更新成功');
+                    setTimeout(() => {
+                        window.location.href = 'main.html?tab=orders';
+                    }, 1000);
+                } else {
+                    showMessage('更新失败: ' + data.message, false);
+                }
+            })
+            .catch(error => {
+                showMessage('网络错误，请重试', false);
+                console.error('Error:', error);
+            });
+        });
+        
+        // 页面加载时加载数据
+        window.onload = function() {
+            loadAllItems();
+            loadOrder();
+        };
+    </script>
+</body>
+</html>

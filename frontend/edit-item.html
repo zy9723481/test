@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑项目 - 水暖管件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1rem;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .save-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-button {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        /* 提示框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>编辑项目</h1>
+    </div>
+    
+    <div class="content">
+        <div class="form-container">
+            <form id="edit-item-form">
+                <input type="hidden" id="item-id" name="id">
+                <div class="form-group">
+                    <label for="item-name">名称</label>
+                    <input type="text" id="item-name" name="name" required readonly style="background-color: #f5f5f5; cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label for="item-material">材质</label>
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" id="item-material" name="material" required style="flex: 3;">
+                        <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+                            <input type="checkbox" id="material-checkbox" style="margin-right: 0.5rem;">
+                            <input type="text" value="无需材质" disabled style="border: none; background: transparent; color: #666;">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="item-purchase-price">进价</label>
+                    <input type="number" id="item-purchase-price" name="purchase_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-selling-price">销售价</label>
+                    <input type="number" id="item-selling-price" name="selling_price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="item-stock">库存</label>
+                    <input type="number" id="item-stock" name="stock">
+                </div>
+                <div class="form-group">
+                    <label for="item-note">备注</label>
+                    <textarea id="item-note" name="note"></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="save-button">保存</button>
+                    <button type="button" class="cancel-button" onclick="window.location.href='main.html?tab=items'">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 提示框 -->
+    <div id="message-modal" class="modal">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <div class="modal-buttons">
+                <button id="modal-ok" class="save-button">确定</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API基础URL配置
+        const API_BASE_URL = 'http://localhost:5000'; // 指向后端服务地址
+        
+        // 获取URL参数
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 加载项目信息
+        function loadItem() {
+            const itemId = getUrlParam('id');
+            if (!itemId) {
+                showMessage('项目ID不存在', false);
+                return;
+            }
+            
+            fetch(`${API_BASE_URL}/api/items/${itemId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const item = data.data;
+                        document.getElementById('item-id').value = item.id;
+                        document.getElementById('item-name').value = item.name;
+                        document.getElementById('item-material').value = (item.material && item.material !== 'null') ? item.material : '';
+                        document.getElementById('item-purchase-price').value = item.purchase_price;
+                        document.getElementById('item-selling-price').value = item.selling_price;
+                        document.getElementById('item-stock').value = item.stock;
+                        document.getElementById('item-note').value = item.note || '';
+                    } else {
+                        showMessage('加载项目失败: ' + data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误，请重试', false);
+                    console.error('Error:', error);
+                });
+        }
+        
+        // 材质勾选功能
+        document.getElementById('material-checkbox').addEventListener('change', function() {
+            const materialInput = document.getElementById('item-material');
+            if (this.checked) {
+                materialInput.required = false;
+                materialInput.disabled = true;
+                materialInput.value = '';
+            } else {
+                materialInput.required = true;
+                materialInput.disabled = false;
+            }
+        });
+        
+        // 显示提示框
+        function showMessage(message, isSuccess = true) {
+            const modal = document.getElementById('message-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalOk = document.getElementById('modal-ok');
+            
+            modalMessage.textContent = message;
+            modalOk.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+            modal.style.display = 'block';
+            
+            modalOk.onclick = function() {
+                modal.style.display = 'none';
+            };
+            
+            // 点击外部关闭
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+        
+        // 表单提交
+        document.getElementById('edit-item-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const itemId = document.getElementById('item-id').value;
+            const formData = new FormData(this);
+            const itemData = {
+                name: formData.get('name'),
+                purchase_price: formData.get('purchase_price'),
+                selling_price: formData.get('selling_price'),
+                stock: formData.get('stock'),
+                note: formData.get('note'),
+                material: formData.get('material') || null
+            };
+            
+            fetch(`${API_BASE_URL}/api/items/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(itemData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('项目更新成功');
+                    setTimeout(() => {
+                        window.location.href = 'main.html?tab=items';
+                    }, 1000);
+                } else {
+                    if (data.message === '项目名称已存在') {
+                        // 跳转到项目管理页面并自动搜索
+                        const name = document.getElementById('item-name').value;
+                        window.location.href = `main.html?tab=items&search=${encodeURIComponent(name)}`;
+                    } else {
+                        showMessage('更新失败: ' + data.message, false);
+                    }
+                }
+            })
+            .catch(error => {
+                showMessage('网络错误，请重试', false);
+                console.error('Error:', error);
+            });
+        });
+        
+        // 页面加载时加载项目信息
+        window.onload = loadItem;
+    </script>
+</body>
+</html>
