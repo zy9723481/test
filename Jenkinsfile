@@ -1,14 +1,12 @@
 pipeline {
     agent any
 
-    // 全局超时，防止构建卡死
     options {
         timeout(time: 15, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10')) // 保留10次构建记录
+        buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
     environment {
-        // 项目环境变量
         DB_HOST = '101.42.35.88'
         DB_USER = 'xiaoshouxitong'
         DB_PASSWORD = '55p3knrBYPs8XJew'
@@ -19,30 +17,20 @@ pipeline {
     }
 
     stages {
-        // ======================
-        // 关键：强制拉取最新代码
-        // ======================
         stage('Git Pull Latest Code') {
             steps {
-                cleanWs() // 清理工作区，删除旧文件
-                git(
-                    url: 'https://github.com/zy9723481/test.git',
-                    branch: 'main',
-                    credentialsId: 'github-token',
-                    extensions: [[$class: 'CleanCheckout']] // 强制干净拉取最新代码
-                )
+                cleanWs() // 清理旧文件，保证每次都是全新代码
+                git branch: 'main', url: 'https://github.com/zy9723481/test.git'
                 echo "✅ 已拉取最新代码"
             }
         }
 
-        // 查看文件结构
         stage('Check Files') {
             steps {
                 sh 'ls -la'
             }
         }
 
-        // 安装Python依赖
         stage('Install Dependencies') {
             steps {
                 sh '''
@@ -53,7 +41,6 @@ pipeline {
             }
         }
 
-        // 构建打包
         stage('Build Project') {
             steps {
                 sh '''
@@ -64,21 +51,10 @@ pipeline {
                 echo "✅ 项目构建完成"
             }
         }
-
-        // 启动服务（可选）
-        stage('Start Service') {
-            steps {
-                echo "✅ 项目已完成构建，可以启动服务！"
-            }
-        }
     }
 
     post {
-        success {
-            echo '🎉 构建成功！代码是最新的！'
-        }
-        failure {
-            echo '❌ 构建失败！'
-        }
+        success { echo '🎉 构建成功！永远使用最新代码！' }
+        failure { echo '❌ 构建失败！' }
     }
 }
