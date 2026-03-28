@@ -1,9 +1,21 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from db import get_db_connection
+import os
 
 app = Flask(__name__)
 CORS(app)
+
+# ======================
+# 🔥 自动托管前端（关键！不用 Nginx）
+# ======================
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('../frontend', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    return send_from_directory('../frontend', path)
 
 # 登录接口
 @app.route('/api/login', methods=['POST'])
@@ -25,8 +37,6 @@ def login():
         connection.close()
 
 # 项目管理接口
-
-# 获取项目列表
 @app.route('/api/items', methods=['GET'])
 def get_items():
     name = request.args.get('name')
@@ -42,7 +52,6 @@ def get_items():
     finally:
         connection.close()
 
-# 新增项目
 @app.route('/api/items', methods=['POST'])
 def add_item():
     data = request.json
@@ -56,7 +65,6 @@ def add_item():
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 检查项目名称是否重复
             if material:
                 cursor.execute('''
                 SELECT * FROM items WHERE name = %s AND material = %s AND is_deleted = 0
@@ -69,7 +77,6 @@ def add_item():
             if cursor.fetchone():
                 return jsonify({'success': False, 'message': '项目名称已存在'})
             
-            # 插入新项目
             cursor.execute('''
             INSERT INTO items (name, purchase_price, selling_price, stock, note, material)
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -79,7 +86,6 @@ def add_item():
     finally:
         connection.close()
 
-# 获取单个项目详情
 @app.route('/api/items/<int:item_id>', methods=['GET'])
 def get_item(item_id):
     connection = get_db_connection()
@@ -96,7 +102,6 @@ def get_item(item_id):
     finally:
         connection.close()
 
-# 更新项目
 @app.route('/api/items/<int:item_id>', methods=['PUT'])
 def update_item(item_id):
     data = request.json
@@ -110,7 +115,6 @@ def update_item(item_id):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 检查项目名称是否重复（排除当前项目）
             if material:
                 cursor.execute('''
                 SELECT * FROM items WHERE name = %s AND material = %s AND id != %s AND is_deleted = 0
@@ -123,7 +127,6 @@ def update_item(item_id):
             if cursor.fetchone():
                 return jsonify({'success': False, 'message': '项目名称已存在'})
             
-            # 更新项目
             cursor.execute('''
             UPDATE items SET name = %s, purchase_price = %s, selling_price = %s, stock = %s, note = %s, material = %s
             WHERE id = %s
@@ -133,7 +136,6 @@ def update_item(item_id):
     finally:
         connection.close()
 
-# 删除项目（逻辑删除）
 @app.route('/api/items/<int:item_id>', methods=['DELETE'])
 def delete_item(item_id):
     connection = get_db_connection()
@@ -149,14 +151,11 @@ def delete_item(item_id):
         connection.close()
 
 # 订单管理接口
-
-# 获取订单列表
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 使用LEFT JOIN和COUNT获取每个订单的项目数量
             cursor.execute('''
             SELECT o.*, COUNT(oi.id) as item_count 
             FROM orders o
@@ -169,7 +168,6 @@ def get_orders():
     finally:
         connection.close()
 
-# 新增订单
 @app.route('/api/orders', methods=['POST'])
 def add_order():
     data = request.json
@@ -181,12 +179,9 @@ def add_order():
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 处理自定义项目并入库
             processed_items = []
             for item in order_items:
-                # 如果是自定义项目（没有item_id，但有完整的项目信息）
                 if not item.get('item_id') and item.get('name'):
-                    # 检查项目是否已存在
                     if item.get('material'):
                         cursor.execute('''
                         SELECT * FROM items WHERE name = %s AND material = %s AND is_deleted = 0
@@ -199,10 +194,8 @@ def add_order():
                     existing_item = cursor.fetchone()
                     
                     if existing_item:
-                        # 项目已存在，使用现有的item_id
                         item_id = existing_item['id']
                     else:
-                        # 项目不存在，创建新项目
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_add')
@@ -228,7 +221,6 @@ def add_order():
                     }
                     processed_items.append(processed_item)
                 else:
-                    # 选择现有项目，获取完整信息
                     cursor.execute('''
                     SELECT name, material, purchase_price, selling_price, note 
                     FROM items WHERE id = %s AND is_deleted = 0
@@ -247,22 +239,18 @@ def add_order():
                         }
                         processed_items.append(processed_item)
             
-            # 计算总金额
             total_amount = 0
             for item in processed_items:
                 total_amount += item['quantity'] * item['price']
             
-            # 计算是否已结账
             is_paid = 1 if paid_amount else 0
             
-            # 插入订单
             cursor.execute('''
             INSERT INTO orders (customer_name, phone, total_amount, paid_amount, is_paid)
             VALUES (%s, %s, %s, %s, %s)
             ''', (customer_name, phone, total_amount, paid_amount, is_paid))
             order_id = cursor.lastrowid
             
-            # 插入订单项目
             for item in processed_items:
                 cursor.execute('''
                 INSERT INTO order_items (order_id, item_id, name, material, purchase_price, selling_price, note, quantity, price)
@@ -278,17 +266,14 @@ def add_order():
     finally:
         connection.close()
 
-# 获取订单详情
 @app.route('/api/orders/<int:order_id>', methods=['GET'])
 def get_order_detail(order_id):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 获取订单信息
             cursor.execute('SELECT * FROM orders WHERE id = %s', (order_id,))
             order = cursor.fetchone()
             
-            # 获取订单项目
             cursor.execute('''
             SELECT * FROM order_items 
             WHERE order_id = %s
@@ -300,7 +285,6 @@ def get_order_detail(order_id):
     finally:
         connection.close()
 
-# 编辑订单（完整编辑功能）
 @app.route('/api/orders/<int:order_id>', methods=['PUT'])
 def update_order(order_id):
     data = request.json
@@ -314,12 +298,9 @@ def update_order(order_id):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 处理自定义项目并入库
             processed_update_items = []
             for item in items_to_update:
-                # 如果是自定义项目（没有item_id，但有完整的项目信息）
                 if not item.get('item_id') and item.get('name'):
-                    # 检查项目是否已存在
                     if item.get('material'):
                         cursor.execute('''
                         SELECT * FROM items WHERE name = %s AND material = %s AND is_deleted = 0
@@ -332,10 +313,8 @@ def update_order(order_id):
                     existing_item = cursor.fetchone()
                     
                     if existing_item:
-                        # 项目已存在，使用现有的item_id
                         item_id = existing_item['id']
                     else:
-                        # 项目不存在，创建新项目
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_edit')
@@ -362,7 +341,6 @@ def update_order(order_id):
                     }
                     processed_update_items.append(processed_item)
                 else:
-                    # 选择现有项目，获取完整信息
                     cursor.execute('''
                     SELECT name, material, purchase_price, selling_price, note 
                     FROM items WHERE id = %s AND is_deleted = 0
@@ -382,12 +360,9 @@ def update_order(order_id):
                         }
                         processed_update_items.append(processed_item)
             
-            # 处理要添加的自定义项目
             processed_add_items = []
             for item in items_to_add:
-                # 如果是自定义项目（没有item_id，但有完整的项目信息）
                 if not item.get('item_id') and item.get('name'):
-                    # 检查项目是否已存在
                     if item.get('material'):
                         cursor.execute('''
                         SELECT * FROM items WHERE name = %s AND material = %s AND is_deleted = 0
@@ -400,10 +375,8 @@ def update_order(order_id):
                     existing_item = cursor.fetchone()
                     
                     if existing_item:
-                        # 项目已存在，使用现有的item_id
                         item_id = existing_item['id']
                     else:
-                        # 项目不存在，创建新项目
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_edit')
@@ -429,7 +402,6 @@ def update_order(order_id):
                     }
                     processed_add_items.append(processed_item)
                 else:
-                    # 选择现有项目，获取完整信息
                     cursor.execute('''
                     SELECT name, material, purchase_price, selling_price, note 
                     FROM items WHERE id = %s AND is_deleted = 0
@@ -448,7 +420,6 @@ def update_order(order_id):
                         }
                         processed_add_items.append(processed_item)
             
-            # 更新现有项目
             for item in processed_update_items:
                 cursor.execute('''
                 UPDATE order_items 
@@ -460,11 +431,9 @@ def update_order(order_id):
                     item['quantity'], item['price'], item['id']
                 ))
             
-            # 删除项目
             for item in items_to_delete:
                 cursor.execute('DELETE FROM order_items WHERE id = %s', (item['id'],))
             
-            # 添加新项目
             for item in processed_add_items:
                 cursor.execute('''
                 INSERT INTO order_items (order_id, item_id, name, material, purchase_price, selling_price, note, quantity, price)
@@ -475,7 +444,6 @@ def update_order(order_id):
                     item['quantity'], item['price']
                 ))
             
-            # 重新计算总金额
             cursor.execute('''
             SELECT COALESCE(SUM(quantity * price), 0) as total 
             FROM order_items 
@@ -484,13 +452,10 @@ def update_order(order_id):
             result = cursor.fetchone()
             total_amount = result['total']
             
-            # 计算是否已结账
             is_paid = 1 if paid_amount else 0
             
-            # 更新订单信息
             has_changes = len(processed_update_items) > 0 or len(items_to_delete) > 0 or len(processed_add_items) > 0
             if has_changes or customer_name or phone is not None or paid_amount is not None:
-                # 构建更新语句
                 update_fields = []
                 update_values = []
                 
@@ -524,18 +489,13 @@ def update_order(order_id):
     finally:
         connection.close()
 
-# 删除订单
 @app.route('/api/orders/<int:order_id>', methods=['DELETE'])
 def delete_order(order_id):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # 先删除订单项目
             cursor.execute('DELETE FROM order_items WHERE order_id = %s', (order_id,))
-            
-            # 再删除订单
             cursor.execute('DELETE FROM orders WHERE id = %s', (order_id,))
-            
             connection.commit()
             return jsonify({'success': True, 'message': '订单删除成功'})
     finally:

@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     options {
-        timeout(time: 15, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 10, unit: 'MINUTES')
     }
 
     environment {
@@ -17,44 +16,47 @@ pipeline {
     }
 
     stages {
-        stage('Git Pull Latest Code') {
+        // 1. 拉最新代码
+        stage('Pull Latest Code') {
             steps {
-                cleanWs() // 清理旧文件，保证每次都是全新代码
+                cleanWs()
                 git branch: 'main', url: 'https://github.com/zy9723481/test.git'
-                echo "✅ 已拉取最新代码"
             }
         }
 
-        stage('Check Files') {
-            steps {
-                sh 'ls -la'
-            }
-        }
-
+        // 2. 安装依赖
         stage('Install Dependencies') {
             steps {
                 sh '''
                     cd backend
-                    pip install -r requirements.txt --no-input --upgrade
+                    pip install -r requirements.txt --no-input
                 '''
-                echo "✅ 依赖安装完成"
             }
         }
 
-        stage('Build Project') {
+        // 3. 🔥 一键启动（前后端一起跑）
+        stage('One-Key Start Project') {
             steps {
                 sh '''
-                    mkdir -p output
-                    cp -r frontend output/
-                    cp -r backend output/
+                    # 杀死旧服务
+                    ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+
+                    # 启动项目
+                    cd backend
+                    nohup python app.py > app.log 2>&1 &
+
+                    sleep 3
+                    echo "====================================="
+                    echo " ✅ 项目启动成功！"
+                    echo " 访问地址：http://服务器IP:5000 "
+                    echo "====================================="
                 '''
-                echo "✅ 项目构建完成"
             }
         }
     }
 
     post {
-        success { echo '🎉 构建成功！永远使用最新代码！' }
-        failure { echo '❌ 构建失败！' }
+        success { echo '🎉 构建 & 启动 全部完成！' }
+        failure { echo '❌ 构建失败' }
     }
 }
