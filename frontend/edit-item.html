@@ -192,7 +192,7 @@
     
     <script>
         // API基础URL配置
-        const API_BASE_URL = 'http://localhost:5000'; // 指向后端服务地址
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'http://101.42.35.88:5000';
         
         // 获取URL参数
         function getUrlParam(name) {
