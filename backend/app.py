@@ -7,15 +7,15 @@ app = Flask(__name__)
 CORS(app)
 
 # ======================
-# 🔥 自动托管前端（关键！不用 Nginx）
+# 🔥 修复前端访问（绝对路径，保证能找到页面）
 # ======================
 @app.route('/')
 def serve_frontend():
-    return send_from_directory('../frontend', 'index.html')
+    return send_from_directory('/root/.jenkins/workspace@2/frontend', 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('../frontend', path)
+    return send_from_directory('/root/.jenkins/workspace@2/frontend', path)
 
 # 登录接口
 @app.route('/api/login', methods=['POST'])
@@ -501,8 +501,5 @@ def delete_order(order_id):
     finally:
         connection.close()
 
-from config import HOST, PORT
-
 if __name__ == '__main__':
-    # 一定要 0.0.0.0，外网才能访问
     app.run(debug=True, host='0.0.0.0', port=5000)
