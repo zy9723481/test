@@ -140,7 +140,8 @@
     
     <script>
         // API基础URL配置
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'http://101.42.35.88:5000';
+        const currentUrl = window.location.href;
+        const API_BASE_URL = currentUrl.includes('localhost') || currentUrl.includes('127.0.0.1') ? 'http://localhost:5000' : 'http://101.42.35.88:5000';
         
         // 材质勾选功能
         document.getElementById('material-checkbox').addEventListener('change', function() {
