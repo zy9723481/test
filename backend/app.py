@@ -7,15 +7,15 @@ app = Flask(__name__)
 CORS(app)
 
 # ======================
-# 🔥 修复前端访问（绝对路径，保证能找到页面）
+# 🔥 修复前端访问（相对路径，任何环境都能运行）
 # ======================
 @app.route('/')
 def serve_frontend():
-    return send_from_directory('/root/.jenkins/workspace@2/frontend', 'index.html')
+    return send_from_directory('../frontend', 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('/root/.jenkins/workspace@2/frontend', path)
+    return send_from_directory('../frontend', path)
 
 # 登录接口
 @app.route('/api/login', methods=['POST'])
