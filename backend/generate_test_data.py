@@ -198,12 +198,127 @@ def insert_orders():
     conn.commit()
     print(f"生成了 {order_count} 个测试订单")
 
+# 生成测试销售记录数据
+sales_names = [
+    '日常销售', '进货', '零售出货', '批发采购', '补货', 
+    '样品采购', '促销出货', '库存补充', '紧急采购', '常规进货'
+]
+
+sales_notes = [
+    '常规销售', '供应商供货', '客户上门', '电话订单', '微信订单',
+    '老客户回购', '新客户开发', '工程配套', '家庭装修', '维修更换'
+]
+
+# 生成测试销售记录
+def insert_sales_records():
+    materials = get_material_ids()
+    if not materials:
+        print("没有可用的材质，请先插入项目数据")
+        return
+    
+    # 获取所有材质详细信息
+    cursor.execute("""
+        SELECT m.id, m.material, m.purchase_price, m.selling_price, p.name as project_name
+        FROM materials m
+        JOIN projects p ON m.project_id = p.id
+        WHERE m.is_deleted = 0 AND p.is_deleted = 0
+    """)
+    all_materials = cursor.fetchall()
+    
+    if not all_materials:
+        print("没有可用的材质信息")
+        return
+    
+    sales_count = 30  # 生成30个测试销售记录
+    inserted_sales = 0
+    
+    for i in range(sales_count):
+        # 随机选择类型
+        sales_type = random.choice(['purchase', 'sale'])
+        
+        # 根据类型生成名称
+        if sales_type == 'sale':
+            name = '日常销售'
+        else:
+            name = random.choice(['进货', '批发采购', '补货', '库存补充', '紧急采购'])
+        
+        note = random.choice(sales_notes)
+        
+        # 随机选择1-5个项目
+        item_count = random.randint(1, 5)
+        selected_materials = random.sample(all_materials, min(item_count, len(all_materials)))
+        
+        # 计算总金额
+        total_amount = 0
+        sales_items = []
+        
+        for material in selected_materials:
+            material_id = material[0]
+            material_name = material[1]
+            purchase_price = float(material[2])
+            selling_price = float(material[3])
+            project_name = material[4]
+            
+            quantity = random.randint(1, 20)
+            
+            # 根据类型决定使用进价还是销售价计算
+            if sales_type == 'purchase':
+                item_total = quantity * purchase_price
+            else:
+                item_total = quantity * selling_price
+            
+            total_amount += item_total
+            
+            sales_items.append({
+                'item_id': material_id,
+                'is_system_item': 1,
+                'name': project_name,
+                'material': material_name,
+                'purchase_price': purchase_price,
+                'selling_price': selling_price,
+                'quantity': quantity,
+                'note': ''
+            })
+        
+        # 插入销售记录主表
+        cursor.execute("""
+            INSERT INTO sales_records (name, type, note, total_amount, is_deleted)
+            VALUES (%s, %s, %s, %s, 0)
+        """, (name, sales_type, note, total_amount))
+        
+        sales_id = cursor.lastrowid
+        
+        # 插入销售项目明细
+        for item in sales_items:
+            cursor.execute("""
+                INSERT INTO sales_items 
+                (sales_id, item_id, is_system_item, name, material, purchase_price, selling_price, quantity, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                sales_id,
+                item['item_id'],
+                item['is_system_item'],
+                item['name'],
+                item['material'],
+                item['purchase_price'],
+                item['selling_price'],
+                item['quantity'],
+                item['note']
+            ))
+        
+        inserted_sales += 1
+        print(f"已生成销售记录 {i+1}/{sales_count}: {name} - ¥{total_amount:.2f}")
+    
+    conn.commit()
+    print(f"成功生成 {inserted_sales} 个销售记录")
+
 # 主函数
 def main():
     print("开始生成测试数据...")
     try:
         insert_projects()
         insert_orders()
+        insert_sales_records()
         print("测试数据生成完成！")
     except Exception as e:
         print(f"发生错误: {e}")

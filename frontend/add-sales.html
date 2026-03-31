@@ -641,6 +641,22 @@
             });
         });
         
+        // 类型选择变化时自动填充名称
+        document.querySelectorAll('input[name="type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const nameInput = document.getElementById('sales-name');
+                if (this.value === 'sale') {
+                    // 选择日常销售时，自动填充名称
+                    nameInput.value = '日常销售';
+                } else {
+                    // 选择进货时，如果当前值是"日常销售"，则清空
+                    if (nameInput.value === '日常销售') {
+                        nameInput.value = '';
+                    }
+                }
+            });
+        });
+        
         // 初始化
         window.onload = function() {
             loadAllItems();
