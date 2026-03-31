@@ -559,8 +559,9 @@
         <div class="tab-container">
             <div class="tab-buttons">
                 <button class="tab-button active" data-tab="home">主页</button>
-                <button class="tab-button" data-tab="items">项目管理</button>
-                <button class="tab-button" data-tab="orders">订单管理</button>
+                <button class="tab-button" data-tab="items">项目</button>
+                <button class="tab-button" data-tab="sales">销售</button>
+                <button class="tab-button" data-tab="orders">订单</button>
             </div>
             
             <div class="tab-content" id="home-tab">
@@ -587,6 +588,38 @@
                 <!-- 项目列表 -->
                 <div class="item-list" id="item-list">
                     <!-- 项目将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            
+            <div class="tab-content hidden" id="sales-tab">
+                
+                <!-- 操作区域 -->
+                <div class="form-group">
+                    <!-- 搜索销售记录 -->
+                    <div class="search-container">
+                        <input type="text" id="sales-search" placeholder="输入名称进行查询">
+                    </div>
+                    
+                    <!-- 时间筛选 -->
+                    <div class="date-filter-container" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; align-items: center;">
+                        <input type="date" id="sales-start-date" placeholder="开始日期" style="flex: 1;">
+                        <span style="color: #666;">至</span>
+                        <input type="date" id="sales-end-date" placeholder="结束日期" style="flex: 1;">
+                    </div>
+                    
+                    <!-- 搜索和新增按钮 -->
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <button id="sales-search-button" style="flex: 1;">搜索</button>
+                    </div>
+                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                        <button onclick="openSalesModal()" style="flex: 1;">新增销售记录</button>
+                    </div>
+
+                </div>
+                
+                <!-- 销售记录列表 -->
+                <div class="item-list" id="sales-list">
+                    <!-- 销售记录将通过JavaScript动态添加 -->
                 </div>
             </div>
             
@@ -646,6 +679,113 @@
         <div class="ai-chat-input-container">
             <input type="text" id="ai-chat-input" placeholder="输入您的问题...">
             <button onclick="sendAIMessage()">发送</button>
+        </div>
+    </div>
+    
+    <!-- 销售记录模态框 -->
+    <div id="sales-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="sales-modal-title">新增销售记录</h2>
+                <button class="close-button" onclick="closeSalesModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 1rem;">
+                <form id="sales-form">
+                    <input type="hidden" id="sales-id" value="">
+                    
+                    <!-- 名称 -->
+                    <div class="form-group">
+                        <label for="sales-name">名称 *</label>
+                        <input type="text" id="sales-name" required placeholder="请输入销售记录名称">
+                    </div>
+                    
+                    <!-- 类型 -->
+                    <div class="form-group">
+                        <label>类型 *</label>
+                        <div style="display: flex; gap: 2rem; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                                <input type="radio" name="sales-type" value="purchase" checked style="width: auto;">
+                                <span>进货</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                                <input type="radio" name="sales-type" value="sale" style="width: auto;">
+                                <span>日常销售</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- 销售项目 -->
+                    <div class="form-group">
+                        <label>销售项目</label>
+                        <div id="sales-items-container">
+                            <!-- 销售项目将通过JavaScript动态添加 -->
+                        </div>
+                        <div style="text-align: right; margin-top: 0.5rem;">
+                            <button type="button" class="icon-button add-button" onclick="addSalesItem()" title="添加项目">+</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 备注 -->
+                    <div class="form-group">
+                        <label for="sales-note">备注</label>
+                        <textarea id="sales-note" rows="2" placeholder="请输入备注"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-top: 1px solid #e0e0e0;">
+                <div class="total-amount" id="sales-total-amount" style="font-size: 1.2rem; font-weight: bold; color: #2c3e50;">
+                    总合计：¥0.00
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" onclick="closeSalesModal()" style="padding: 0.6rem 1.2rem; background-color: #ccc; color: #333; border: none; border-radius: 4px; cursor: pointer;">取消</button>
+                    <button type="button" onclick="saveSalesRecord()" style="padding: 0.6rem 1.2rem; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 销售记录预览模态框 -->
+    <div id="sales-preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">销售记录详情</h2>
+                <button class="close-button" onclick="closeSalesPreview()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <div class="preview-order-header">
+                    <div class="preview-order-info">
+                        <div class="preview-order-info-item">
+                            <div class="preview-order-info-label">名称</div>
+                            <div class="preview-order-info-value" id="sales-preview-name"></div>
+                        </div>
+                        <div class="preview-order-info-item">
+                            <div class="preview-order-info-label">类型</div>
+                            <div class="preview-order-info-value" id="sales-preview-type"></div>
+                        </div>
+                        <div class="preview-order-info-item">
+                            <div class="preview-order-info-label">时间</div>
+                            <div class="preview-order-info-value" id="sales-preview-time"></div>
+                        </div>
+                        <div class="preview-order-info-item">
+                            <div class="preview-order-info-label">总金额</div>
+                            <div class="preview-order-info-value" id="sales-preview-total"></div>
+                        </div>
+                        <div class="preview-order-info-item">
+                            <div class="preview-order-info-label">备注</div>
+                            <div class="preview-order-info-value" id="sales-preview-note"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-order-items-section" style="margin-top: 1.5rem;">
+                    <h3 class="preview-order-items-title">销售项目</h3>
+                    <div class="preview-order-items" id="sales-preview-items">
+                        <!-- 预览项目将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeSalesPreview()">关闭</button>
+            </div>
         </div>
     </div>
     
@@ -724,6 +864,11 @@
                     loadItems();
                 }
                 
+                // 如果切换到销售页，加载销售记录列表
+                if (tabId === 'sales-tab') {
+                    loadSalesRecords();
+                }
+                
                 // 如果切换到订单页，加载订单列表
                 if (tabId === 'orders-tab') {
                     loadOrders();
@@ -740,7 +885,18 @@
                     if (data.success) {
                         const itemCount = data.data.length;
                         const itemsTab = document.querySelector('.tab-button[data-tab="items"]');
-                        itemsTab.textContent = `项目管理 (${itemCount})`;
+                        itemsTab.textContent = `项目 (${itemCount})`;
+                    }
+                });
+            
+            // 获取销售记录数量
+            fetch(`${API_BASE_URL}/api/sales`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const salesCount = data.data.length;
+                        const salesTab = document.querySelector('.tab-button[data-tab="sales"]');
+                        salesTab.textContent = `销售 (${salesCount})`;
                     }
                 });
             
@@ -751,7 +907,7 @@
                     if (data.success) {
                         const orderCount = data.data.length;
                         const ordersTab = document.querySelector('.tab-button[data-tab="orders"]');
-                        ordersTab.textContent = `订单管理 (${orderCount})`;
+                        ordersTab.textContent = `订单 (${orderCount})`;
                     }
                 });
         }
@@ -986,7 +1142,7 @@
                             const phoneDisplay = order.phone ? `手机号: ${order.phone}<br>` : '';
                             orderCard.innerHTML = `
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                                    <h3>${order.customer_name} - ${new Date(order.created_at).toLocaleString()}</h3>
+                                    <h3>${order.customer_name} - ${new Date(order.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</h3>
                                     <button onclick="deleteOrder(${order.id})" style="background-color: #f44336; color: white; padding: 0.3rem 0.6rem; font-size: 0.8rem;">删除</button>
                                 </div>
                                 <p>${phoneDisplay}总金额: ¥${order.total_amount}</p>
@@ -1247,7 +1403,7 @@
                                         <td style="padding: 0.8rem;">${index + 1}</td>
                                         <td style="padding: 0.8rem;">¥${parseFloat(item.purchase_price).toFixed(2)}</td>
                                         <td style="padding: 0.8rem;">¥${parseFloat(item.selling_price).toFixed(2)}</td>
-                                        <td style="padding: 0.8rem;">${new Date(item.update_time).toLocaleString()}</td>
+                                        <td style="padding: 0.8rem;">${new Date(item.update_time).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</td>
                                         <td style="padding: 0.8rem;">${updateMethod}</td>
                                     </tr>
                                 `;
@@ -1321,7 +1477,7 @@
         });
         
         // AI助手功能
-        const DEEPSEEK_API_KEY = "YOUR_DEEPSEEK_API_KEY";
+        const DEEPSEEK_API_KEY = "sk-6c9c8be9abfb4db58381c35abf602e8d";
         const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
         const DEEPSEEK_MODEL = "deepseek-chat";
         
@@ -1543,24 +1699,15 @@
                             <div>
                                 <strong>${material.material}</strong> - 销售价: ¥${parseFloat(material.selling_price).toFixed(2)}
                             </div>
-                            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <button onclick="viewPriceHistory('${project.name}', '${material.material}')" style="background: none; border: none; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; justify-content: center;">
-                                    <svg t="1774968121795" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                                        <path d="M480 192c-17.7 0-32 14.3-32 32l0 320c0 17.7 14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L512 512l0-288C512 206.3 497.7 192 480 192z" fill="#9c27b0"></path>
-                                        <path d="M983.8 312.7c-25.8-61-62.7-115.7-109.7-162.7-47-47-101.8-83.9-162.7-109.7-63.1-26.7-130.2-40.2-199.3-40.2-105.3 0-206.5 31.7-292.6 91.8C177.9 120.7 141 155.5 109.7 195.2c-17.1 21.7-32.4 44.7-45.7 68.7l0-104c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 192c0 17.7 14.3 32 32 32l160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-84.9 0c73.5-154.4 232.3-256 404.9-256 247 0 448 201 448 448s-201 448-448 448c-224.8 0-415.8-167.9-444.3-390.4-2.2-17.5-18.3-29.9-35.8-27.7-17.5 2.2-29.9 18.3-27.7 35.8 15.7 122.5 75.5 235.3 168.3 317.6 93.7 83 214.2 128.7 339.5 128.7 69.1 0 136.2-13.5 199.3-40.2 61-25.8 115.7-62.7 162.7-109.7 47-47 83.9-101.8 109.7-162.7 26.7-63.1 40.2-130.2 40.2-199.3S1010.5 375.8 983.8 312.7z" fill="#9c27b0"></path>
-                                    </svg>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="viewPriceHistory('${project.name}', '${material.material}')" style="padding: 0.2rem; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                    <svg t="1774968121795" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1679" width="16" height="16"><path d="M480 192c-17.7 0-32 14.3-32 32l0 320c0 17.7 14.3 32 32 32l256 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L512 512l0-288C512 206.3 497.7 192 480 192z" p-id="1680"></path><path d="M983.8 312.7c-25.8-61-62.7-115.7-109.7-162.7-47-47-101.8-83.9-162.7-109.7-63.1-26.7-130.2-40.2-199.3-40.2-105.3 0-206.5 31.7-292.6 91.8C177.9 120.7 141 155.5 109.7 195.2c-17.1 21.7-32.4 44.7-45.7 68.7l0-104c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 192c0 17.7 14.3 32 32 32l160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-84.9 0c73.5-154.4 232.3-256 404.9-256 247 0 448 201 448 448s-201 448-448 448c-224.8 0-415.8-167.9-444.3-390.4-2.2-17.5-18.3-29.9-35.8-27.7-17.5 2.2-29.9 18.3-27.7 35.8 15.7 122.5 75.5 235.3 168.3 317.6 93.7 83 214.2 128.7 339.5 128.7 69.1 0 136.2-13.5 199.3-40.2 61-25.8 115.7-62.7 162.7-109.7 47-47 83.9-101.8 109.7-162.7 26.7-63.1 40.2-130.2 40.2-199.3S1010.5 375.8 983.8 312.7z" p-id="1681"></path></svg>
                                 </button>
-                                <button onclick="editMaterial(${material.id}, ${project.id})" style="background: none; border: none; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; justify-content: center;">
-                                    <svg t="1774968166363" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                                        <path d="M474.58679343 587.16868738c-11.45302241 0-22.90604486-4.37057868-31.6472022-13.11173601-17.48231469-17.48231469-17.48231469-45.83841849 0-63.29440437l487.24053555-487.24053552c17.48231469-17.48231469 45.81208967-17.48231469 63.29440431 0 17.48231469 17.48231469 17.48231469 45.83841849 0 63.29440441L506.23399561 574.05695137a44.61676276 44.61676276 0 0 1-31.64720218 13.11173601z" fill="#2196F3"></path>
-                                        <path d="M904.16728498 1017.19676833h-781.96497912c-62.68884228 0-113.68770304-50.99886074-113.68770305-113.71403181v-781.96497913c0-62.71517108 50.99886074-113.71403182 113.66137425-113.71403185l457.51533479 0.0263288c24.72273117 0 44.75893818 20.03620706 44.75893819 44.7589382s-20.03620706 44.75893818-44.75893819 44.7589382l-457.51533479-0.02632877c-13.2960375 0-24.14349786 10.84746035-24.14349785 24.16982661v781.96497915c0 13.32236631 10.84746035 24.1698266 24.16982665 24.16982664h781.96497912c13.32236631 0 24.1698266-10.84746035 24.16982668-24.16982664V403.42008173c0-24.72273117 20.06253583-44.75893818 44.75893815-44.75893828 24.72273117 0 44.75893818 20.03620706 44.7589382 44.75893828V903.50906532c0 62.68884228-50.99886074 113.68770304-113.68770303 113.68770301z" fill="#2196F3"></path>
-                                    </svg>
+                                <button onclick="editMaterial(${material.id}, ${project.id})" style="padding: 0.2rem; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                    <svg t="1774968166363" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2666" width="16" height="16"><path d="M474.58679343 587.16868738c-11.45302241 0-22.90604486-4.37057868-31.6472022-13.11173601-17.48231469-17.48231469-17.48231469-45.83841849 0-63.29440437l487.24053555-487.24053552c17.48231469-17.48231469 45.81208967-17.48231469 63.29440431 0 17.48231469 17.48231469 17.48231469 45.83841849 0 63.29440441L506.23399561 574.05695137a44.61676276 44.61676276 0 0 1-31.64720218 13.11173601z" fill="white" p-id="2667"></path><path d="M904.16728498 1017.19676833h-781.96497912c-62.68884228 0-113.68770304-50.99886074-113.68770305-113.71403181v-781.96497913c0-62.71517108 50.99886074-113.71403182 113.66137425-113.71403185l457.51533479 0.0263288c24.72273117 0 44.75893818 20.03620706 44.75893819 44.7589382s-20.03620706 44.75893818-44.75893819 44.7589382l-457.51533479-0.02632877c-13.2960375 0-24.14349786 10.84746035-24.14349785 24.16982661v781.96497915c0 13.32236631 10.84746035 24.1698266 24.16982665 24.16982664h781.96497912c13.32236631 0 24.1698266-10.84746035 24.16982668-24.16982664V403.42008173c0-24.72273117 20.06253583-44.75893818 44.75893815-44.75893828 24.72273117 0 44.75893818 20.03620706 44.7589382 44.75893828V903.50906532c0 62.68884228-50.99886074 113.68770304-113.68770303 113.68770301z" fill="white" p-id="2668"></path></svg>
                                 </button>
-                                <button onclick="deleteMaterial(${material.id})" style="background: none; border: none; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; justify-content: center;">
-                                    <svg t="1774968183040" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                                        <path d="M519.620465 0c-103.924093 0-188.511256 82.467721-192.083349 185.820279H85.015814A48.91386 48.91386 0 0 0 36.101953 234.686512a48.91386 48.91386 0 0 0 48.913861 48.866232h54.010046V831.345116c0 102.852465 69.822512 186.844279 155.909954 186.844279h439.200744c86.087442 0 155.909953-83.491721 155.909954-186.844279V284.100465h48.91386a48.91386 48.91386 0 0 0 48.913861-48.890046 48.91386 48.91386 0 0 0-48.913861-48.866233h-227.756651A191.559442 191.559442 0 0 0 519.620465 0z m-107.234232 177.080558c3.548279-49.771163 46.627721-88.540279 99.851907-88.540279 53.224186 0 96.327442 38.745302 99.351813 88.540279h-199.20372z m-111.997024 752.044651c-30.981953 0-65.083535-39.15014-65.083535-95.041488V287.744h575.488v546.839814c0 55.915163-34.077767 95.041488-65.059721 95.041488H300.389209v-0.500093z" fill="#f44336"></path>
-                                        <path d="M368.116093 796.814884c24.361674 0 44.27014-21.670698 44.27014-48.818605v-278.623256c0-27.147907-19.908465-48.818605-44.27014-48.818604-24.33786 0-44.27014 21.670698-44.27014 48.818604v278.623256c0 27.147907 19.360744 48.818605 44.293954 48.818605z m154.933581 0c24.361674 0 44.293953-21.670698 44.293954-48.818605v-278.623256c0-27.147907-19.932279-48.818605-44.293954-48.818604-24.33786 0-44.27014 21.670698-44.270139 48.818604v278.623256c0 27.147907 19.932279 48.818605 44.293953 48.818605z m132.810419 0c24.33786 0 44.27014-21.670698 44.27014-48.818605v-278.623256c0-27.147907-19.932279-48.818605-44.27014-48.818604s-44.27014 21.670698-44.27014 48.818604v278.623256c0 27.147907 19.360744 48.818605 44.27014 48.818605z" fill="#f44336"></path>
-                                    </svg>
+                                <button onclick="deleteMaterial(${material.id})" style="padding: 0.2rem; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                    <svg t="1774968183040" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3678" width="16" height="16"><path d="M519.620465 0c-103.924093 0-188.511256 82.467721-192.083349 185.820279H85.015814A48.91386 48.91386 0 0 0 36.101953 234.686512a48.91386 48.91386 0 0 0 48.913861 48.866232h54.010046V831.345116c0 102.852465 69.822512 186.844279 155.909954 186.844279h439.200744c86.087442 0 155.909953-83.491721 155.909954-186.844279V284.100465h48.91386a48.91386 48.91386 0 0 0 48.913861-48.890046 48.91386 48.91386 0 0 0-48.913861-48.866233h-227.756651A191.559442 191.559442 0 0 0 519.620465 0z m-107.234232 177.080558c3.548279-49.771163 46.627721-88.540279 99.851907-88.540279 53.224186 0 96.327442 38.745302 99.351813 88.540279h-199.20372z m-111.997024 752.044651c-30.981953 0-65.083535-39.15014-65.083535-95.041488V287.744h575.488v546.839814c0 55.915163-34.077767 95.041488-65.059721 95.041488H300.389209v-0.500093z" fill="white" p-id="3679"></path><path d="M368.116093 796.814884c24.361674 0 44.27014-21.670698 44.27014-48.818605v-278.623256c0-27.147907-19.908465-48.818605-44.27014-48.818604-24.33786 0-44.27014 21.670698-44.27014 48.818604v278.623256c0 27.147907 19.360744 48.818605 44.293954 48.818605z m154.933581 0c24.361674 0 44.293953-21.670698 44.293954-48.818605v-278.623256c0-27.147907-19.932279-48.818605-44.293954-48.818604-24.33786 0-44.27014 21.670698-44.270139 48.818604v278.623256c0 27.147907 19.932279 48.818605 44.293953 48.818605z m132.810419 0c24.33786 0 44.27014-21.670698 44.27014-48.818605v-278.623256c0-27.147907-19.932279-48.818605-44.27014-48.818604s-44.27014 21.670698-44.27014 48.818604v278.623256c0 27.147907 19.360744 48.818605 44.27014 48.818605z" fill="white" p-id="3680"></path></svg>
                                 </button>
                             </div>
                         </div>
@@ -1673,6 +1820,10 @@
                     // 执行项目搜索
                     document.getElementById('item-search').value = search;
                     loadItems(search);
+                } else if (tab === 'sales') {
+                    // 执行销售记录搜索
+                    document.getElementById('sales-search').value = search;
+                    loadSalesRecords(search);
                 } else if (tab === 'orders') {
                     // 执行订单搜索
                     document.getElementById('order-search').value = search;
@@ -1683,6 +1834,656 @@
             // 更新页签数量
             updateTabCounts();
         };
+        
+        // ==================== 销售记录功能 ====================
+        
+        let salesItems = [];
+        let salesItemIndex = 0;
+        let allProjectsForSales = [];
+        
+        // 加载销售记录列表
+        function loadSalesRecords(search = '') {
+            const salesList = document.getElementById('sales-list');
+            salesList.innerHTML = '<p style="text-align: center; color: #999;">加载中...</p>';
+            
+            let url = `${API_BASE_URL}/api/sales`;
+            if (search) {
+                url += `?search=${encodeURIComponent(search)}`;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        salesList.innerHTML = '';
+                        
+                        if (data.data.length === 0) {
+                            salesList.innerHTML = '<p style="text-align: center; color: #999;">暂无销售记录</p>';
+                            return;
+                        }
+                        
+                        data.data.forEach(record => {
+                            const recordCard = document.createElement('div');
+                            recordCard.className = 'item-card';
+                            recordCard.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background-color: white;';
+                            
+                            const typeText = record.type === 'purchase' ? '进货' : '日常销售';
+                            const typeColor = record.type === 'purchase' ? '#2196F3' : '#FF9800';
+                            
+                            recordCard.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h3 style="margin-bottom: 0.5rem;">${record.name}</h3>
+                                        <span style="display: inline-block; padding: 0.2rem 0.6rem; background-color: ${typeColor}; color: white; border-radius: 12px; font-size: 0.8rem; margin-bottom: 0.5rem;">${typeText}</span>
+                                        <p style="color: #666; font-size: 0.9rem; margin: 0.3rem 0;">时间: ${new Date(record.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</p>
+                                        <p style="color: #666; font-size: 0.9rem; margin: 0.3rem 0;">总金额: ¥${parseFloat(record.total_amount).toFixed(2)}</p>
+                                        <p style="color: #666; font-size: 0.9rem; margin: 0.3rem 0;">总项目: ${record.item_count}</p>
+                                    </div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button onclick="viewSalesRecord(${record.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">查看详情</button>
+                                        <button onclick="editSalesRecord(${record.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">编辑</button>
+                                        <button onclick="deleteSalesRecord(${record.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">删除</button>
+                                    </div>
+                                </div>
+                            `;
+                            salesList.appendChild(recordCard);
+                        });
+                    } else {
+                        salesList.innerHTML = '<p style="text-align: center; color: #999;">加载失败</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    salesList.innerHTML = '<p style="text-align: center; color: #999;">网络错误</p>';
+                });
+        }
+        
+        // 打开销售记录模态框
+        function openSalesModal(salesId = null) {
+            // 加载项目列表
+            loadProjectsForSales();
+            
+            // 重置表单
+            document.getElementById('sales-form').reset();
+            document.getElementById('sales-id').value = '';
+            document.getElementById('sales-items-container').innerHTML = '';
+            salesItems = [];
+            salesItemIndex = 0;
+            updateSalesTotalAmount();
+            
+            if (salesId) {
+                // 编辑模式
+                document.getElementById('sales-modal-title').textContent = '编辑销售记录';
+                loadSalesRecordForEdit(salesId);
+            } else {
+                // 新增模式
+                document.getElementById('sales-modal-title').textContent = '新增销售记录';
+                // 添加一个默认项目
+                addSalesItem();
+            }
+            
+            document.getElementById('sales-modal').style.display = 'block';
+        }
+        
+        // 关闭销售记录模态框
+        function closeSalesModal() {
+            document.getElementById('sales-modal').style.display = 'none';
+        }
+        
+        // 加载项目列表（用于销售记录）
+        function loadProjectsForSales() {
+            fetch(`${API_BASE_URL}/api/projects`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allProjectsForSales = data.data;
+                    }
+                });
+        }
+        
+        // 添加销售项目
+        function addSalesItem() {
+            const container = document.getElementById('sales-items-container');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'sales-item';
+            itemDiv.dataset.index = salesItemIndex;
+            itemDiv.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; background-color: #f9f9f9;';
+            
+            itemDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: bold;">项目 ${salesItemIndex + 1}</span>
+                    <button type="button" onclick="removeSalesItem(${salesItemIndex})" style="background-color: #f44336; color: white; border: none; border-radius: 4px; padding: 0.2rem 0.5rem; cursor: pointer; font-size: 0.8rem;">删除</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="checkbox" id="sales-system-item-${salesItemIndex}" onchange="toggleSalesSystemItem(${salesItemIndex})" style="width: auto;">
+                    <label for="sales-system-item-${salesItemIndex}" style="margin: 0; font-weight: normal; cursor: pointer;">系统项目</label>
+                </div>
+                <div class="sales-item-row" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div class="sales-item-name-wrapper" style="flex: 1; position: relative;">
+                        <input type="text" class="sales-item-name" data-index="${salesItemIndex}" placeholder="项目名称 *" style="width: 100%; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;">
+                    </div>
+                    <input type="number" class="sales-item-quantity" data-index="${salesItemIndex}" placeholder="数量 *" min="1" step="1" value="1" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="flex: 0 0 70px; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" class="sales-item-material" data-index="${salesItemIndex}" placeholder="材质" style="flex: 1; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;">
+                    <input type="number" class="sales-item-purchase-price" data-index="${salesItemIndex}" placeholder="进价" step="0.01" style="flex: 1; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;">
+                    <input type="number" class="sales-item-selling-price" data-index="${salesItemIndex}" placeholder="销售价 *" step="0.01" style="flex: 1; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;">
+                </div>
+            `;
+            
+            container.appendChild(itemDiv);
+            
+            // 初始化销售项目对象
+            salesItems.push({
+                index: salesItemIndex,
+                isSystemItem: false,
+                item_id: null,
+                name: '',
+                material: '',
+                purchase_price: 0,
+                selling_price: 0,
+                quantity: 1,
+                price: 0
+            });
+            
+            // 添加事件监听器
+            const inputs = itemDiv.querySelectorAll('input');
+            inputs.forEach(input => {
+                if (!input.type === 'checkbox') {
+                    input.addEventListener('change', function() {
+                        updateSalesItem(salesItemIndex);
+                    });
+                }
+            });
+            
+            const quantityInput = itemDiv.querySelector('.sales-item-quantity');
+            quantityInput.addEventListener('change', function() {
+                updateSalesTotalAmount();
+            });
+            
+            const sellingPriceInput = itemDiv.querySelector('.sales-item-selling-price');
+            sellingPriceInput.addEventListener('change', function() {
+                updateSalesTotalAmount();
+            });
+            
+            salesItemIndex++;
+        }
+        
+        // 删除销售项目
+        function removeSalesItem(index) {
+            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+            if (itemDiv) {
+                itemDiv.remove();
+                salesItems = salesItems.filter(item => item.index !== index);
+                updateSalesTotalAmount();
+            }
+        }
+        
+        // 切换系统项目模式
+        function toggleSalesSystemItem(index) {
+            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+            const checkbox = document.getElementById(`sales-system-item-${index}`);
+            const nameInput = itemDiv.querySelector('.sales-item-name');
+            const orderItem = salesItems.find(item => item.index === index);
+            
+            if (checkbox.checked) {
+                // 切换到系统项目模式
+                orderItem.isSystemItem = true;
+                nameInput.style.display = 'none';
+                
+                // 创建可搜索的下拉框组件
+                createSalesSearchableDropdown(itemDiv, index, orderItem);
+            } else {
+                // 切换到自定义模式
+                orderItem.isSystemItem = false;
+                nameInput.style.display = 'block';
+                
+                // 移除搜索下拉框组件
+                const searchDropdown = itemDiv.querySelector('.sales-searchable-dropdown');
+                if (searchDropdown) {
+                    searchDropdown.remove();
+                }
+                
+                // 清空系统项目数据
+                orderItem.item_id = null;
+                
+                // 启用所有字段
+                const inputs = itemDiv.querySelectorAll('input[type="text"], input[type="number"]');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+            }
+        }
+        
+        // 创建可搜索的下拉框组件（销售记录）
+        function createSalesSearchableDropdown(itemDiv, index, orderItem) {
+            // 检查是否已存在
+            let dropdown = itemDiv.querySelector('.sales-searchable-dropdown');
+            if (dropdown) {
+                dropdown.remove();
+            }
+            
+            // 创建下拉框容器
+            dropdown = document.createElement('div');
+            dropdown.className = 'sales-searchable-dropdown';
+            dropdown.style.cssText = 'position: relative; width: 100%; flex: 1;';
+            
+            // 创建搜索输入框
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'sales-search-input';
+            searchInput.placeholder = '搜索系统项目...';
+            searchInput.style.cssText = 'width: 100%; height: 36px; padding: 0 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; box-sizing: border-box;';
+            
+            // 创建选项容器
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'sales-options-container';
+            optionsContainer.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 0 0 4px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100; display: none;';
+            
+            // 填充选项
+            const options = [];
+            allProjectsForSales.forEach(project => {
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('div');
+                        option.className = 'sales-dropdown-option';
+                        option.dataset.value = material.id;
+                        option.dataset.projectName = project.name;
+                        option.dataset.material = material.material;
+                        option.dataset.purchasePrice = material.purchase_price;
+                        option.dataset.sellingPrice = material.selling_price;
+                        option.dataset.note = material.note || '';
+                        option.textContent = `${project.name} - ${material.material}`;
+                        option.style.cssText = 'padding: 0.5rem 0.8rem; cursor: pointer;';
+                        option.style.hover = 'background-color: #f5f5f5;';
+                        
+                        // 添加点击事件
+                        option.addEventListener('click', function() {
+                            selectSalesOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                        });
+                        
+                        options.push(option);
+                        optionsContainer.appendChild(option);
+                    });
+                }
+            });
+            
+            // 添加到容器
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            
+            // 添加到页面
+            const nameWrapper = itemDiv.querySelector('.sales-item-name-wrapper');
+            nameWrapper.appendChild(dropdown);
+            
+            // 添加搜索事件
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                // 显示选项容器
+                optionsContainer.style.display = 'block';
+                
+                // 过滤选项
+                options.forEach(option => {
+                    if (option.textContent.toLowerCase().includes(searchTerm)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 点击输入框显示选项
+            searchInput.addEventListener('focus', function() {
+                optionsContainer.style.display = 'block';
+            });
+            
+            // 点击外部关闭选项
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    optionsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 选择选项（销售记录）
+        function selectSalesOption(option, searchInput, optionsContainer, orderItem, itemDiv, index) {
+            const value = option.dataset.value;
+            const projectName = option.dataset.projectName;
+            const material = option.dataset.material || '';
+            const purchasePrice = option.dataset.purchasePrice || '0';
+            const sellingPrice = option.dataset.sellingPrice || '0';
+            const note = option.dataset.note || '';
+            
+            // 更新订单项目数据
+            orderItem.isSystemItem = true;
+            orderItem.item_id = parseInt(value);
+            orderItem.name = projectName;
+            orderItem.material = material;
+            orderItem.purchase_price = parseFloat(purchasePrice) || 0;
+            orderItem.selling_price = parseFloat(sellingPrice) || 0;
+            orderItem.note = note;
+            orderItem.price = parseFloat(sellingPrice) || 0;
+            
+            // 填充字段
+            itemDiv.querySelector('.sales-item-material').value = material;
+            itemDiv.querySelector('.sales-item-purchase-price').value = purchasePrice;
+            itemDiv.querySelector('.sales-item-selling-price').value = sellingPrice;
+            
+            // 禁用不可编辑字段（材质、进价）
+            itemDiv.querySelector('.sales-item-material').disabled = true;
+            itemDiv.querySelector('.sales-item-purchase-price').disabled = true;
+            
+            // 销售价保持可编辑
+            itemDiv.querySelector('.sales-item-selling-price').disabled = false;
+            
+            // 更新搜索输入框
+            searchInput.value = option.textContent;
+            
+            // 关闭选项容器
+            optionsContainer.style.display = 'none';
+            
+            updateSalesTotalAmount();
+        }
+        
+        // 更新销售项目
+        function updateSalesItem(index) {
+            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+            const orderItem = salesItems.find(item => item.index === index);
+            
+            if (!orderItem.isSystemItem) {
+                // 非系统项目，从输入框获取值
+                orderItem.name = itemDiv.querySelector('.sales-item-name').value;
+                orderItem.material = itemDiv.querySelector('.sales-item-material').value;
+                orderItem.purchase_price = parseFloat(itemDiv.querySelector('.sales-item-purchase-price').value) || 0;
+            }
+            
+            orderItem.selling_price = parseFloat(itemDiv.querySelector('.sales-item-selling-price').value) || 0;
+            orderItem.quantity = parseInt(itemDiv.querySelector('.sales-item-quantity').value) || 1;
+            orderItem.price = orderItem.selling_price;
+        }
+        
+        // 更新销售总金额
+        function updateSalesTotalAmount() {
+            let total = 0;
+            salesItems.forEach(item => {
+                const itemDiv = document.querySelector(`.sales-item[data-index="${item.index}"]`);
+                if (itemDiv) {
+                    const quantity = parseInt(itemDiv.querySelector('.sales-item-quantity').value) || 1;
+                    const sellingPrice = parseFloat(itemDiv.querySelector('.sales-item-selling-price').value) || 0;
+                    total += quantity * sellingPrice;
+                }
+            });
+            
+            document.getElementById('sales-total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
+        }
+        
+        // 保存销售记录
+        function saveSalesRecord() {
+            const salesId = document.getElementById('sales-id').value;
+            const name = document.getElementById('sales-name').value.trim();
+            const type = document.querySelector('input[name="sales-type"]:checked').value;
+            const note = document.getElementById('sales-note').value.trim();
+            
+            // 验证必填字段
+            if (!name) {
+                showMessage('请输入名称', false);
+                document.getElementById('sales-name').focus();
+                return;
+            }
+            
+            // 收集项目数据
+            const items = [];
+            for (const item of salesItems) {
+                const itemDiv = document.querySelector(`.sales-item[data-index="${item.index}"]`);
+                if (itemDiv) {
+                    const quantity = parseInt(itemDiv.querySelector('.sales-item-quantity').value) || 0;
+                    const sellingPrice = parseFloat(itemDiv.querySelector('.sales-item-selling-price').value) || 0;
+                    
+                    if (quantity <= 0) {
+                        showMessage('数量必须大于0', false);
+                        itemDiv.querySelector('.sales-item-quantity').focus();
+                        return;
+                    }
+                    
+                    if (sellingPrice <= 0) {
+                        showMessage('销售价必须大于0', false);
+                        itemDiv.querySelector('.sales-item-selling-price').focus();
+                        return;
+                    }
+                    
+                    let itemName = item.name;
+                    if (!item.isSystemItem) {
+                        itemName = itemDiv.querySelector('.sales-item-name').value.trim();
+                        if (!itemName) {
+                            showMessage('请输入项目名称', false);
+                            itemDiv.querySelector('.sales-item-name').focus();
+                            return;
+                        }
+                    }
+                    
+                    items.push({
+                        item_id: item.item_id,
+                        is_system_item: item.isSystemItem,
+                        name: itemName,
+                        material: itemDiv.querySelector('.sales-item-material').value,
+                        purchase_price: parseFloat(itemDiv.querySelector('.sales-item-purchase-price').value) || 0,
+                        selling_price: sellingPrice,
+                        quantity: quantity,
+                        note: item.note || ''
+                    });
+                }
+            }
+            
+            if (items.length === 0) {
+                showMessage('请至少添加一个项目', false);
+                return;
+            }
+            
+            const data = {
+                name: name,
+                type: type,
+                note: note,
+                items: items
+            };
+            
+            const url = salesId ? `${API_BASE_URL}/api/sales/${salesId}` : `${API_BASE_URL}/api/sales`;
+            const method = salesId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(salesId ? '销售记录更新成功' : '销售记录新增成功', true);
+                    closeSalesModal();
+                    loadSalesRecords();
+                    updateTabCounts();
+                } else {
+                    showMessage('保存失败: ' + data.message, false);
+                }
+            })
+            .catch(error => {
+                showMessage('网络错误，请重试', false);
+                console.error('Error:', error);
+            });
+        }
+        
+        // 加载销售记录用于编辑
+        function loadSalesRecordForEdit(salesId) {
+            fetch(`${API_BASE_URL}/api/sales/${salesId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const record = data.data;
+                        document.getElementById('sales-id').value = record.id;
+                        document.getElementById('sales-name').value = record.name;
+                        document.querySelector(`input[name="sales-type"][value="${record.type}"]`).checked = true;
+                        document.getElementById('sales-note').value = record.note || '';
+                        
+                        // 清空现有项目
+                        document.getElementById('sales-items-container').innerHTML = '';
+                        salesItems = [];
+                        salesItemIndex = 0;
+                        
+                        // 添加项目
+                        record.items.forEach((item, index) => {
+                            addSalesItem();
+                            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+                            const orderItem = salesItems.find(si => si.index === index);
+                            
+                            if (item.is_system_item) {
+                                // 系统项目
+                                document.getElementById(`sales-system-item-${index}`).checked = true;
+                                toggleSalesSystemItem(index);
+                                
+                                // 设置搜索框值
+                                const searchInput = itemDiv.querySelector('.sales-search-input');
+                                if (searchInput) {
+                                    searchInput.value = `${item.name} - ${item.material}`;
+                                }
+                                
+                                orderItem.item_id = item.item_id;
+                                orderItem.name = item.name;
+                                orderItem.material = item.material;
+                                orderItem.purchase_price = parseFloat(item.purchase_price);
+                                orderItem.selling_price = parseFloat(item.selling_price);
+                                orderItem.isSystemItem = true;
+                            } else {
+                                // 非系统项目
+                                itemDiv.querySelector('.sales-item-name').value = item.name;
+                                orderItem.name = item.name;
+                            }
+                            
+                            itemDiv.querySelector('.sales-item-material').value = item.material || '';
+                            itemDiv.querySelector('.sales-item-purchase-price').value = item.purchase_price || '';
+                            itemDiv.querySelector('.sales-item-selling-price').value = item.selling_price;
+                            itemDiv.querySelector('.sales-item-quantity').value = item.quantity;
+                        });
+                        
+                        updateSalesTotalAmount();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('加载销售记录失败', false);
+                });
+        }
+        
+        // 编辑销售记录
+        function editSalesRecord(salesId) {
+            openSalesModal(salesId);
+        }
+        
+        // 删除销售记录
+        function deleteSalesRecord(salesId) {
+            createConfirmModal(
+                '确定要删除这条销售记录吗？',
+                function() {
+                    fetch(`${API_BASE_URL}/api/sales/${salesId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage('销售记录删除成功', true);
+                            loadSalesRecords();
+                            updateTabCounts();
+                        } else {
+                            showMessage('删除失败: ' + data.message, false);
+                        }
+                    })
+                    .catch(error => {
+                        showMessage('网络错误，请重试', false);
+                        console.error('Error:', error);
+                    });
+                }
+            );
+        }
+        
+        // 查看销售记录详情
+        function viewSalesRecord(salesId) {
+            fetch(`${API_BASE_URL}/api/sales/${salesId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const record = data.data;
+                        
+                        document.getElementById('sales-preview-name').textContent = record.name;
+                        document.getElementById('sales-preview-type').textContent = record.type === 'purchase' ? '进货' : '日常销售';
+                        document.getElementById('sales-preview-time').textContent = new Date(record.created_at).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+                        document.getElementById('sales-preview-total').textContent = `¥${parseFloat(record.total_amount).toFixed(2)}`;
+                        document.getElementById('sales-preview-note').textContent = record.note || '无';
+                        
+                        // 显示项目列表
+                        const itemsContainer = document.getElementById('sales-preview-items');
+                        itemsContainer.innerHTML = '';
+                        
+                        record.items.forEach(item => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = 'preview-order-item';
+                            itemDiv.style.cssText = 'display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.2rem; padding: 1.2rem; background-color: #f9f9f9; border-radius: 6px; border: 1px solid #e0e0e0;';
+                            
+                            const typeBadge = item.is_system_item ? '<span style="font-size: 0.8rem; padding: 0.2rem 0.6rem; background-color: #e3f2fd; color: #1976d2; border-radius: 12px;">系统项目</span>' : '<span style="font-size: 0.8rem; padding: 0.2rem 0.6rem; background-color: #fff3e0; color: #f57c00; border-radius: 12px;">自定义项目</span>';
+                            
+                            itemDiv.innerHTML = `
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: bold; color: #333; font-size: 1rem;">${item.name}</span>
+                                    ${typeBadge}
+                                </div>
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 120px;">
+                                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.3rem; font-weight: 500;">材质</div>
+                                        <div style="width: 100%; padding: 0.6rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.9rem; background-color: white;">${item.material || '-'}</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px;">
+                                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.3rem; font-weight: 500;">数量</div>
+                                        <div style="width: 100%; padding: 0.6rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.9rem; background-color: white;">${item.quantity}</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px;">
+                                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.3rem; font-weight: 500;">进价</div>
+                                        <div style="width: 100%; padding: 0.6rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.9rem; background-color: white;">¥${parseFloat(item.purchase_price).toFixed(2)}</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px;">
+                                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.3rem; font-weight: 500;">销售价</div>
+                                        <div style="width: 100%; padding: 0.6rem; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.9rem; background-color: white;">¥${parseFloat(item.selling_price).toFixed(2)}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right; font-weight: bold; color: #2c3e50;">
+                                    小计: ¥${(item.quantity * item.selling_price).toFixed(2)}
+                                </div>
+                            `;
+                            
+                            itemsContainer.appendChild(itemDiv);
+                        });
+                        
+                        document.getElementById('sales-preview-modal').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('加载销售记录详情失败', false);
+                });
+        }
+        
+        // 关闭销售记录预览
+        function closeSalesPreview() {
+            document.getElementById('sales-preview-modal').style.display = 'none';
+        }
+        
+        // 搜索按钮事件
+        document.getElementById('sales-search-button').addEventListener('click', function() {
+            const search = document.getElementById('sales-search').value.trim();
+            loadSalesRecords(search);
+        });
     </script>
 </body>
 </html>

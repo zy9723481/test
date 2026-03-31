@@ -601,7 +601,7 @@ def add_order():
                         # 检查价格是否发生变化
                         if (existing_item['purchase_price'] != item['purchase_price'] or 
                             existing_item['selling_price'] != item['selling_price']):
-                            # 更新价格
+                            # 更新 items 表中的价格
                             cursor.execute('''
                             UPDATE items SET purchase_price = %s, selling_price = %s
                             WHERE id = %s
@@ -609,6 +609,17 @@ def add_order():
                                 item['purchase_price'],
                                 item['selling_price'],
                                 item_id
+                            ))
+                            
+                            # 同时更新 materials 表中的价格
+                            cursor.execute('''
+                            UPDATE materials SET purchase_price = %s, selling_price = %s
+                            WHERE project_id = (SELECT id FROM projects WHERE name = %s AND is_deleted = 0 LIMIT 1) AND material = %s AND is_deleted = 0
+                            ''', (
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item['name'],
+                                item.get('material', '')
                             ))
                             
                             # 记录价格轨迹
@@ -831,7 +842,7 @@ def update_order(order_id):
                         # 检查价格是否发生变化
                         if (existing_item['purchase_price'] != item['purchase_price'] or 
                             existing_item['selling_price'] != item['selling_price']):
-                            # 更新价格
+                            # 更新 items 表中的价格
                             cursor.execute('''
                             UPDATE items SET purchase_price = %s, selling_price = %s
                             WHERE id = %s
@@ -839,6 +850,17 @@ def update_order(order_id):
                                 item['purchase_price'],
                                 item['selling_price'],
                                 item_id
+                            ))
+                            
+                            # 同时更新 materials 表中的价格
+                            cursor.execute('''
+                            UPDATE materials SET purchase_price = %s, selling_price = %s
+                            WHERE project_id = (SELECT id FROM projects WHERE name = %s AND is_deleted = 0 LIMIT 1) AND material = %s AND is_deleted = 0
+                            ''', (
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item['name'],
+                                item.get('material', '')
                             ))
                             
                             # 记录价格轨迹
@@ -990,7 +1012,7 @@ def update_order(order_id):
                         # 检查价格是否发生变化
                         if (existing_item['purchase_price'] != item['purchase_price'] or 
                             existing_item['selling_price'] != item['selling_price']):
-                            # 更新价格
+                            # 更新 items 表中的价格
                             cursor.execute('''
                             UPDATE items SET purchase_price = %s, selling_price = %s
                             WHERE id = %s
@@ -998,6 +1020,17 @@ def update_order(order_id):
                                 item['purchase_price'],
                                 item['selling_price'],
                                 item_id
+                            ))
+                            
+                            # 同时更新 materials 表中的价格
+                            cursor.execute('''
+                            UPDATE materials SET purchase_price = %s, selling_price = %s
+                            WHERE project_id = (SELECT id FROM projects WHERE name = %s AND is_deleted = 0 LIMIT 1) AND material = %s AND is_deleted = 0
+                            ''', (
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item['name'],
+                                item.get('material', '')
                             ))
                             
                             # 记录价格轨迹
@@ -1173,6 +1206,376 @@ def get_price_history():
             
             history = cursor.fetchall()
             return jsonify({'success': True, 'data': history})
+    finally:
+        connection.close()
+
+# ==================== 销售记录API ====================
+
+# 初始化销售记录表
+def init_sales_tables():
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 创建销售记录主表
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sales_records (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                type ENUM('purchase', 'sale') NOT NULL,
+                note TEXT,
+                total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                is_deleted TINYINT(1) DEFAULT 0
+            )
+            ''')
+            
+            # 创建销售记录项目明细表
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS sales_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sales_id INT NOT NULL,
+                item_id INT,
+                is_system_item TINYINT(1) DEFAULT 0,
+                name VARCHAR(255) NOT NULL,
+                material VARCHAR(255),
+                purchase_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+                selling_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+                quantity INT NOT NULL DEFAULT 1,
+                note TEXT,
+                FOREIGN KEY (sales_id) REFERENCES sales_records(id) ON DELETE CASCADE
+            )
+            ''')
+            
+            connection.commit()
+            print('销售记录表初始化成功')
+    except Exception as e:
+        print(f'初始化销售记录表失败: {e}')
+    finally:
+        connection.close()
+
+# 初始化销售记录表
+init_sales_tables()
+
+# 获取销售记录列表
+@app.route('/api/sales', methods=['GET'])
+def get_sales_records():
+    search = request.args.get('search', '')
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            query = '''
+            SELECT s.*, COUNT(si.id) as item_count 
+            FROM sales_records s 
+            LEFT JOIN sales_items si ON s.id = si.sales_id 
+            WHERE s.is_deleted = 0
+            '''
+            params = []
+            
+            if search:
+                query += ' AND s.name LIKE %s'
+                params.append(f'%{search}%')
+            
+            if start_date:
+                query += ' AND DATE(s.created_at) >= %s'
+                params.append(start_date)
+            
+            if end_date:
+                query += ' AND DATE(s.created_at) <= %s'
+                params.append(end_date)
+            
+            query += ' GROUP BY s.id ORDER BY s.created_at DESC'
+            
+            cursor.execute(query, params)
+            records = cursor.fetchall()
+            
+            return jsonify({'success': True, 'data': records})
+    finally:
+        connection.close()
+
+# 获取单个销售记录详情
+@app.route('/api/sales/<int:sales_id>', methods=['GET'])
+def get_sales_record(sales_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 获取主记录
+            cursor.execute('''
+            SELECT * FROM sales_records 
+            WHERE id = %s AND is_deleted = 0
+            ''', (sales_id,))
+            record = cursor.fetchone()
+            
+            if not record:
+                return jsonify({'success': False, 'message': '销售记录不存在'})
+            
+            # 获取项目明细
+            cursor.execute('''
+            SELECT * FROM sales_items 
+            WHERE sales_id = %s
+            ''', (sales_id,))
+            items = cursor.fetchall()
+            
+            record['items'] = items
+            
+            return jsonify({'success': True, 'data': record})
+    finally:
+        connection.close()
+
+# 创建销售记录
+@app.route('/api/sales', methods=['POST'])
+def create_sales_record():
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    record_type = data.get('type', 'sale')
+    note = data.get('note', '').strip()
+    items = data.get('items', [])
+    
+    if not name:
+        return jsonify({'success': False, 'message': '名称不能为空'})
+    
+    if not items:
+        return jsonify({'success': False, 'message': '请至少添加一个项目'})
+    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 计算总金额
+            total_amount = sum(item.get('selling_price', 0) * item.get('quantity', 1) for item in items)
+            
+            # 插入主记录
+            cursor.execute('''
+            INSERT INTO sales_records (name, type, note, total_amount)
+            VALUES (%s, %s, %s, %s)
+            ''', (name, record_type, note, total_amount))
+            
+            sales_id = cursor.lastrowid
+            
+            # 处理每个项目
+            for item in items:
+                item_name = item.get('name', '').strip()
+                is_system_item = item.get('is_system_item', False)
+                item_id = item.get('item_id')
+                material = item.get('material', '')
+                purchase_price = item.get('purchase_price', 0)
+                selling_price = item.get('selling_price', 0)
+                quantity = item.get('quantity', 1)
+                item_note = item.get('note', '')
+                
+                # 如果不是系统项目，检查是否需要添加到项目管理
+                if not is_system_item and item_name:
+                    # 检查项目是否已存在
+                    cursor.execute('''
+                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                    ''', (item_name,))
+                    project = cursor.fetchone()
+                    
+                    if not project:
+                        # 创建新项目
+                        cursor.execute('''
+                        INSERT INTO projects (name) VALUES (%s)
+                        ''', (item_name,))
+                        project_id = cursor.lastrowid
+                        
+                        # 创建材质
+                        cursor.execute('''
+                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                        VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                        ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                        
+                        # 记录价格轨迹
+                        cursor.execute('''
+                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                        VALUES (%s, %s, %s, %s, 'auto')
+                        ''', (item_name, material or '默认', purchase_price, selling_price))
+                    else:
+                        project_id = project['id']
+                        
+                        # 检查材质是否已存在
+                        cursor.execute('''
+                        SELECT id, purchase_price, selling_price FROM materials 
+                        WHERE project_id = %s AND material = %s AND is_deleted = 0
+                        ''', (project_id, material or '默认'))
+                        existing_material = cursor.fetchone()
+                        
+                        if existing_material:
+                            # 更新价格
+                            if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                                cursor.execute('''
+                                UPDATE materials SET purchase_price = %s, selling_price = %s
+                                WHERE id = %s
+                                ''', (purchase_price, selling_price, existing_material['id']))
+                                
+                                # 记录价格轨迹
+                                cursor.execute('''
+                                INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                                VALUES (%s, %s, %s, %s, 'auto')
+                                ''', (item_name, material or '默认', purchase_price, selling_price))
+                        else:
+                            # 创建新材质
+                            cursor.execute('''
+                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                            VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                            ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                
+                # 插入销售项目明细
+                cursor.execute('''
+                INSERT INTO sales_items (sales_id, item_id, is_system_item, name, material, purchase_price, selling_price, quantity, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (sales_id, item_id, 1 if is_system_item else 0, item_name, material, purchase_price, selling_price, quantity, item_note))
+            
+            connection.commit()
+            return jsonify({'success': True, 'message': '销售记录创建成功', 'id': sales_id})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({'success': False, 'message': f'创建失败: {str(e)}'})
+    finally:
+        connection.close()
+
+# 更新销售记录
+@app.route('/api/sales/<int:sales_id>', methods=['PUT'])
+def update_sales_record(sales_id):
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    record_type = data.get('type', 'sale')
+    note = data.get('note', '').strip()
+    items = data.get('items', [])
+    
+    if not name:
+        return jsonify({'success': False, 'message': '名称不能为空'})
+    
+    if not items:
+        return jsonify({'success': False, 'message': '请至少添加一个项目'})
+    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 检查记录是否存在
+            cursor.execute('''
+            SELECT id FROM sales_records WHERE id = %s AND is_deleted = 0
+            ''', (sales_id,))
+            if not cursor.fetchone():
+                return jsonify({'success': False, 'message': '销售记录不存在'})
+            
+            # 计算总金额
+            total_amount = sum(item.get('selling_price', 0) * item.get('quantity', 1) for item in items)
+            
+            # 更新主记录
+            cursor.execute('''
+            UPDATE sales_records SET name = %s, type = %s, note = %s, total_amount = %s
+            WHERE id = %s
+            ''', (name, record_type, note, total_amount, sales_id))
+            
+            # 删除旧的项目明细
+            cursor.execute('DELETE FROM sales_items WHERE sales_id = %s', (sales_id,))
+            
+            # 处理每个项目
+            for item in items:
+                item_name = item.get('name', '').strip()
+                is_system_item = item.get('is_system_item', False)
+                item_id = item.get('item_id')
+                material = item.get('material', '')
+                purchase_price = item.get('purchase_price', 0)
+                selling_price = item.get('selling_price', 0)
+                quantity = item.get('quantity', 1)
+                item_note = item.get('note', '')
+                
+                # 如果不是系统项目，检查是否需要添加到项目管理
+                if not is_system_item and item_name:
+                    # 检查项目是否已存在
+                    cursor.execute('''
+                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                    ''', (item_name,))
+                    project = cursor.fetchone()
+                    
+                    if not project:
+                        # 创建新项目
+                        cursor.execute('''
+                        INSERT INTO projects (name) VALUES (%s)
+                        ''', (item_name,))
+                        project_id = cursor.lastrowid
+                        
+                        # 创建材质
+                        cursor.execute('''
+                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                        VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                        ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                        
+                        # 记录价格轨迹
+                        cursor.execute('''
+                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                        VALUES (%s, %s, %s, %s, 'auto')
+                        ''', (item_name, material or '默认', purchase_price, selling_price))
+                    else:
+                        project_id = project['id']
+                        
+                        # 检查材质是否已存在
+                        cursor.execute('''
+                        SELECT id, purchase_price, selling_price FROM materials 
+                        WHERE project_id = %s AND material = %s AND is_deleted = 0
+                        ''', (project_id, material or '默认'))
+                        existing_material = cursor.fetchone()
+                        
+                        if existing_material:
+                            # 更新价格
+                            if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                                cursor.execute('''
+                                UPDATE materials SET purchase_price = %s, selling_price = %s
+                                WHERE id = %s
+                                ''', (purchase_price, selling_price, existing_material['id']))
+                                
+                                # 记录价格轨迹
+                                cursor.execute('''
+                                INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                                VALUES (%s, %s, %s, %s, 'auto')
+                                ''', (item_name, material or '默认', purchase_price, selling_price))
+                        else:
+                            # 创建新材质
+                            cursor.execute('''
+                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                            VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                            ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                
+                # 插入销售项目明细
+                cursor.execute('''
+                INSERT INTO sales_items (sales_id, item_id, is_system_item, name, material, purchase_price, selling_price, quantity, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (sales_id, item_id, 1 if is_system_item else 0, item_name, material, purchase_price, selling_price, quantity, item_note))
+            
+            connection.commit()
+            return jsonify({'success': True, 'message': '销售记录更新成功'})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({'success': False, 'message': f'更新失败: {str(e)}'})
+    finally:
+        connection.close()
+
+# 删除销售记录（软删除）
+@app.route('/api/sales/<int:sales_id>', methods=['DELETE'])
+def delete_sales_record(sales_id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 检查记录是否存在
+            cursor.execute('''
+            SELECT id FROM sales_records WHERE id = %s AND is_deleted = 0
+            ''', (sales_id,))
+            if not cursor.fetchone():
+                return jsonify({'success': False, 'message': '销售记录不存在'})
+            
+            # 软删除
+            cursor.execute('''
+            UPDATE sales_records SET is_deleted = 1 WHERE id = %s
+            ''', (sales_id,))
+            
+            connection.commit()
+            return jsonify({'success': True, 'message': '销售记录删除成功'})
+    except Exception as e:
+        connection.rollback()
+        return jsonify({'success': False, 'message': f'删除失败: {str(e)}'})
     finally:
         connection.close()
 

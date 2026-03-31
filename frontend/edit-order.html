@@ -661,7 +661,7 @@
                         <select class="item-select" data-index="${itemIndex}" style="display: ${isSystemItem ? 'block' : 'none'}; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
                         </select>
                     </div>
-                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量 *" min="1" value="${item.quantity}" style="flex: 0 0 80px; height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量 *" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" value="${item.quantity}" style="flex: 0 0 80px; height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
                 </div>
                 <div class="item-fields" id="item-fields-${itemIndex}">
                     <div class="item-fields-row">
@@ -689,18 +689,7 @@
             
             orderItemsDiv.appendChild(itemDiv);
             
-            // 添加事件监听器
-            const inputs = itemDiv.querySelectorAll('input:not([disabled])');
-            inputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    updateOrderItem(itemIndex);
-                });
-            });
-            
-            const quantity = itemDiv.querySelector('.item-quantity');
-            quantity.addEventListener('change', function() {
-                updateTotalAmount();
-            });
+            const currentIndex = itemIndex; // 保存当前索引
             
             // 初始化orderItem对象
             const orderItem = {
@@ -719,9 +708,30 @@
             
             orderItems.push(orderItem);
             
+            // 添加事件监听器
+            const inputs = itemDiv.querySelectorAll('input:not([disabled])');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateOrderItem(currentIndex);
+                });
+            });
+            
+            const quantity = itemDiv.querySelector('.item-quantity');
+            quantity.addEventListener('change', function() {
+                updateTotalAmount();
+            });
+            
+            // 为所有项目添加销售价变更监听器
+            const sellingPriceInput = itemDiv.querySelector('.item-selling-price');
+            sellingPriceInput.addEventListener('change', function() {
+                const sellingPrice = parseFloat(this.value) || 0;
+                orderItem.selling_price = sellingPrice;
+                orderItem.price = sellingPrice;
+                updateTotalAmount();
+            });
+            
             // 添加系统项目选择事件监听器
             const select = itemDiv.querySelector('.item-select');
-            const currentIndex = itemIndex; // 保存当前索引
             
             // 填充下拉框选项 - 从所有项目的材质中获取
             allProjects.forEach(project => {
@@ -745,15 +755,6 @@
             select.addEventListener('change', function() {
                 handleSystemItemSelect(this, currentIndex);
             });
-            
-            // 如果是系统项目，添加销售价变更监听
-            if (isSystemItem) {
-                itemDiv.querySelector('.item-selling-price').addEventListener('change', function() {
-                    orderItem.selling_price = parseFloat(this.value) || 0;
-                    orderItem.price = parseFloat(this.value) || 0;
-                    updateTotalAmount();
-                });
-            }
             
             itemIndex++;
         }
@@ -779,7 +780,7 @@
                         <select class="item-select" data-index="${itemIndex}" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
                         </select>
                     </div>
-                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" value="1" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
                     <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
                 </div>
                 <div class="item-fields" id="item-fields-${itemIndex}">
@@ -808,11 +809,13 @@
             
             orderItemsDiv.appendChild(itemDiv);
             
+            const currentIndex = itemIndex; // 保存当前索引
+            
             // 添加事件监听器
             const inputs = itemDiv.querySelectorAll('input');
             inputs.forEach(input => {
                 input.addEventListener('change', function() {
-                    updateOrderItem(itemIndex);
+                    updateOrderItem(currentIndex);
                 });
             });
             
@@ -823,7 +826,6 @@
             
             // 添加下拉框事件监听器（只添加一次）
             const select = itemDiv.querySelector('.item-select');
-            const currentIndex = itemIndex; // 保存当前索引
             select.addEventListener('change', function() {
                 handleSystemItemSelect(this, currentIndex);
             });
@@ -1322,8 +1324,11 @@
                 if (!itemDiv) return;
                 
                 const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
+                const sellingPrice = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
                 orderItem.quantity = quantity;
-                total += orderItem.price * quantity;
+                orderItem.selling_price = sellingPrice;
+                orderItem.price = sellingPrice;
+                total += sellingPrice * quantity;
             });
             document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
         }

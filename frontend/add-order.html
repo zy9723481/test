@@ -582,15 +582,15 @@
                     <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
                 </div>
                 <div class="order-item-row">
-                    <div class="item-name-wrapper" style="flex: 1; position: relative; height: 80px;">
+                    <div class="item-name-wrapper" style="flex: 1; position: relative;">
                         <input type="text" class="item-name" data-index="${itemIndex}" placeholder="项目名称 *" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
                         <div class="system-item-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%;">
                             <input type="text" class="item-search" data-index="${itemIndex}" placeholder="搜索系统项目..." style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px 4px 0 0; font-size: 1rem; box-sizing: border-box; border-bottom: none;">
-                            <select class="item-select" data-index="${itemIndex}" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 0 0 4px 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
+                            <select class="item-select" data-index="${itemIndex}" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 0 0 4px 4px; font-size: 1rem; background-color: white; box-sizing: border-box; display: none;">
                             </select>
                         </div>
                     </div>
-                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" value="1" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量 *" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="flex: 0 0 80px; height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
                 </div>
                 <div class="item-fields" id="item-fields-${itemIndex}">
                     <div class="item-fields-row">
@@ -655,47 +655,6 @@
             itemIndex++;
         }
         
-        // 填充系统项目下拉框选项
-        function fillSystemItemOptions(select) {
-            // 清空现有选项
-            select.innerHTML = '';
-            
-            // 添加默认选项
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = '请选择系统项目';
-            select.appendChild(defaultOption);
-            
-            // 添加系统项目选项（包含材质）
-            allProjects.forEach(project => {
-                if (project.materials && project.materials.length > 0) {
-                    project.materials.forEach(material => {
-                        const option = document.createElement('option');
-                        option.value = material.id;
-                        option.setAttribute('data-project-id', project.id);
-                        option.setAttribute('data-project-name', project.name);
-                        option.setAttribute('data-material', material.material);
-                        option.setAttribute('data-purchase-price', material.purchase_price);
-                        option.setAttribute('data-selling-price', material.selling_price);
-                        option.setAttribute('data-note', material.note || '');
-                        option.textContent = `${project.name}-${material.material}`;
-                        select.appendChild(option);
-                    });
-                } else {
-                    const option = document.createElement('option');
-                    option.value = project.id;
-                    option.setAttribute('data-project-id', project.id);
-                    option.setAttribute('data-project-name', project.name);
-                    option.setAttribute('data-material', '');
-                    option.setAttribute('data-purchase-price', '0');
-                    option.setAttribute('data-selling-price', '0');
-                    option.setAttribute('data-note', '');
-                    option.textContent = project.name;
-                    select.appendChild(option);
-                }
-            });
-        }
-        
         // 清空项目录入内容
         function clearItemFields(index) {
             const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
@@ -721,31 +680,33 @@
             const nameInput = itemDiv.querySelector('.item-name');
             const systemItemContainer = itemDiv.querySelector('.system-item-container');
             const select = itemDiv.querySelector('.item-select');
-            const searchInput = itemDiv.querySelector('.item-search');
             const orderItem = orderItems.find(item => item.index === index);
             
             if (checkbox.checked) {
                 // 切换到系统项目模式
                 orderItem.isSystemItem = true;
                 nameInput.style.display = 'none';
-                systemItemContainer.style.display = 'block';
-                
-                // 填充下拉框选项
-                fillSystemItemOptions(select);
-                
-                // 添加搜索功能
-                searchInput.addEventListener('input', function() {
-                    filterSystemItems(this, select);
-                });
+                systemItemContainer.style.display = 'none'; // 隐藏原始容器
+                select.style.display = 'none'; // 隐藏原始select
                 
                 // 清空已录入的内容
                 clearItemFields(index);
+                
+                // 创建可搜索的下拉框组件
+                createSearchableDropdown(itemDiv, index, orderItem);
             } else {
                 // 切换到自定义模式
                 orderItem.isSystemItem = false;
                 nameInput.style.display = 'block';
                 systemItemContainer.style.display = 'none';
+                select.style.display = 'none';
                 select.value = '';
+                
+                // 移除搜索下拉框组件
+                const searchDropdown = itemDiv.querySelector('.searchable-dropdown');
+                if (searchDropdown) {
+                    searchDropdown.remove();
+                }
                 
                 // 清空系统项目数据
                 orderItem.item_id = null;
@@ -765,21 +726,159 @@
             }
         }
         
-        // 过滤系统项目
-        function filterSystemItems(searchInput, select) {
-            const searchTerm = searchInput.value.toLowerCase();
-            const options = select.options;
-            
-            for (let i = 0; i < options.length; i++) {
-                const option = options[i];
-                const text = option.textContent.toLowerCase();
-                
-                if (text.includes(searchTerm) || i === 0) { // 始终显示默认选项
-                    option.style.display = '';
-                } else {
-                    option.style.display = 'none';
-                }
+        // 创建可搜索的下拉框组件
+        function createSearchableDropdown(itemDiv, index, orderItem) {
+            // 检查是否已存在
+            let dropdown = itemDiv.querySelector('.searchable-dropdown');
+            if (dropdown) {
+                dropdown.remove();
             }
+            
+            // 创建下拉框容器
+            dropdown = document.createElement('div');
+            dropdown.className = 'searchable-dropdown';
+            dropdown.style.cssText = 'position: relative; width: 100%;';
+            
+            // 创建搜索输入框
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'search-input';
+            searchInput.placeholder = '搜索系统项目...';
+            searchInput.style.cssText = 'width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;';
+            
+            // 创建选项容器
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
+            optionsContainer.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 0 0 4px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100; display: none;';
+            
+            // 填充选项
+            const options = [];
+            allProjects.forEach(project => {
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('div');
+                        option.className = 'dropdown-option';
+                        option.dataset.value = material.id;
+                        option.dataset.projectName = project.name;
+                        option.dataset.material = material.material;
+                        option.dataset.purchasePrice = material.purchase_price;
+                        option.dataset.sellingPrice = material.selling_price;
+                        option.dataset.note = material.note || '';
+                        option.textContent = `${project.name} - ${material.material}`;
+                        option.style.cssText = 'padding: 0.5rem 0.8rem; cursor: pointer; hover: background-color #f5f5f5;';
+                        
+                        // 添加点击事件
+                        option.addEventListener('click', function() {
+                            selectOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                        });
+                        
+                        options.push(option);
+                        optionsContainer.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('div');
+                    option.className = 'dropdown-option';
+                    option.dataset.value = project.id;
+                    option.dataset.projectName = project.name;
+                    option.textContent = project.name;
+                    option.style.cssText = 'padding: 0.5rem 0.8rem; cursor: pointer; hover: background-color #f5f5f5;';
+                    
+                    // 添加点击事件
+                    option.addEventListener('click', function() {
+                        selectOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                    });
+                    
+                    options.push(option);
+                    optionsContainer.appendChild(option);
+                }
+            });
+            
+            // 添加到容器
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            
+            // 添加到页面
+            const selectWrapper = itemDiv.querySelector('.item-name-wrapper');
+            selectWrapper.appendChild(dropdown);
+            
+            // 添加搜索事件
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                // 显示选项容器
+                optionsContainer.style.display = 'block';
+                
+                // 过滤选项
+                options.forEach(option => {
+                    if (option.textContent.toLowerCase().includes(searchTerm)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 点击输入框显示选项
+            searchInput.addEventListener('focus', function() {
+                optionsContainer.style.display = 'block';
+            });
+            
+            // 点击外部关闭选项
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    optionsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 选择选项
+        function selectOption(option, searchInput, optionsContainer, orderItem, itemDiv, index) {
+            const value = option.dataset.value;
+            const projectName = option.dataset.projectName;
+            const material = option.dataset.material || '';
+            const purchasePrice = option.dataset.purchasePrice || '0';
+            const sellingPrice = option.dataset.sellingPrice || '0';
+            const note = option.dataset.note || '';
+            
+            // 更新订单项目数据
+            orderItem.isSystemItem = true;
+            orderItem.item_id = parseInt(value);
+            orderItem.name = projectName;
+            orderItem.material = material;
+            orderItem.purchase_price = parseFloat(purchasePrice) || 0;
+            orderItem.selling_price = parseFloat(sellingPrice) || 0;
+            orderItem.note = note;
+            orderItem.price = parseFloat(sellingPrice) || 0;
+            
+            // 填充字段
+            itemDiv.querySelector('.item-name').value = projectName;
+            itemDiv.querySelector('.item-material').value = material;
+            itemDiv.querySelector('.item-purchase-price').value = purchasePrice;
+            itemDiv.querySelector('.item-selling-price').value = sellingPrice;
+            itemDiv.querySelector('.item-note').value = note;
+            
+            // 禁用不可编辑字段（材质、进价、备注）
+            itemDiv.querySelector('.item-material').disabled = true;
+            itemDiv.querySelector('.item-purchase-price').disabled = true;
+            itemDiv.querySelector('.item-note').disabled = true;
+            
+            // 销售价保持可编辑
+            itemDiv.querySelector('.item-selling-price').disabled = false;
+            
+            // 添加销售价变更监听
+            itemDiv.querySelector('.item-selling-price').onchange = function() {
+                orderItem.selling_price = parseFloat(this.value) || 0;
+                orderItem.price = parseFloat(this.value) || 0;
+                updateTotalAmount();
+            };
+            
+            // 更新搜索输入框
+            searchInput.value = option.textContent;
+            
+            // 关闭选项容器
+            optionsContainer.style.display = 'none';
+            
+            updateTotalAmount();
         }
         
         // 处理系统项目选择

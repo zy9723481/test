@@ -17,9 +17,6 @@ __pycache__/
 .env.test.local
 .env.production.local
 
-# Local configuration files
-config.py
-
 # Logs
 logs
 *.log
