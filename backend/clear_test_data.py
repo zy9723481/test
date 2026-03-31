@@ -15,15 +15,27 @@ def clear_test_data():
             cursor.execute('DELETE FROM orders')
             print("已清空 orders 表")
             
-            # 3. 清空材质表
+            # 3. 清空销售项目表（子表）
+            cursor.execute('DELETE FROM sales_items')
+            print("已清空 sales_items 表")
+            
+            # 4. 清空销售记录表（父表）
+            cursor.execute('DELETE FROM sales_records')
+            print("已清空 sales_records 表")
+            
+            # 5. 清空价格轨迹表
+            cursor.execute('DELETE FROM price_history')
+            print("已清空 price_history 表")
+            
+            # 6. 清空材质表
             cursor.execute('DELETE FROM materials')
             print("已清空 materials 表")
             
-            # 4. 清空项目表
+            # 7. 清空项目表
             cursor.execute('DELETE FROM projects')
             print("已清空 projects 表")
             
-            # 5. 清空旧的项目表
+            # 8. 清空旧的项目表
             cursor.execute('DELETE FROM items')
             print("已清空 items 表")
             
