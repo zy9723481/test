@@ -7,28 +7,29 @@ pipeline {
                 cleanWs()
                 sh '''
                     echo "=== 开始拉取代码 ==="
-                    # 设置Git配置
-                    git config --global http.sslVerify false
-                    git config --global credential.helper store
-                    git config --global http.postBuffer 524288000
                     
                     # 检查网络连接
                     echo "=== 检查网络连接 ==="
                     ping -c 3 github.com || echo "网络连接可能有问题，但继续尝试"
                     
-                    # 尝试克隆仓库
-                    echo "=== 开始克隆仓库 ==="
-                    timeout 60s git clone --depth 1 https://github.com/zy9723481/test.git .
+                    # 使用wget下载仓库的zip包
+                    echo "=== 开始下载代码 ==="
+                    wget -O test.zip https://github.com/zy9723481/test/archive/refs/heads/main.zip
                     
-                    # 检查克隆结果
-                    if [ -d ".git" ]; then
-                        echo "=== 仓库克隆成功 ==="
-                        # 确保在main分支
-                        git checkout main
-                        # 获取最新代码
-                        git pull origin main
+                    # 解压zip包
+                    echo "=== 开始解压代码 ==="
+                    unzip -o test.zip
+                    
+                    # 移动文件到根目录
+                    echo "=== 移动文件到根目录 ==="
+                    mv test-main/* .
+                    rm -rf test-main test.zip
+                    
+                    # 检查解压结果
+                    if [ -d "backend" ] && [ -d "frontend" ]; then
+                        echo "=== 代码下载成功 ==="
                     else
-                        echo "=== 仓库克隆失败，使用备用方法 ==="
+                        echo "=== 代码下载失败，使用备用方法 ==="
                         # 备用方法：手动创建目录结构
                         mkdir -p backend frontend
                         echo "目录结构创建完成"
