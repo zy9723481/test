@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增销售记录 - 水暖管件管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 1rem;
+            padding-bottom: 120px;
+        }
+        
+        .form-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        input:disabled, select:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+        
+        .sales-items {
+            margin: 1rem 0;
+        }
+        
+        .sales-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .sales-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sales-item-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .system-item-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .system-item-checkbox input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .system-item-checkbox label {
+            font-size: 0.8rem;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .sales-item-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .sales-item-row .item-name-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .sales-item-row .item-quantity {
+            flex: 0 0 80px;
+        }
+        
+        .icon-button {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .add-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .remove-button {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .item-fields-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .item-fields-row input {
+            flex: 1;
+        }
+        
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: right;
+            color: #2c3e50;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .bottom-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 1rem;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .bottom-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .save-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .cancel-button {
+            background-color: #ccc;
+            color: #333;
+        }
+        
+        .type-selector {
+            display: flex;
+            gap: 2rem;
+            margin-top: 0.5rem;
+        }
+        
+        .type-selector label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .type-selector input[type="radio"] {
+            width: auto;
+        }
+        
+        /* 搜索下拉框样式 */
+        .searchable-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-input {
+            width: 100%;
+            height: 40px;
+            padding: 0 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .options-container {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: none;
+        }
+        
+        .dropdown-option {
+            padding: 0.5rem 0.8rem;
+            cursor: pointer;
+        }
+        
+        .dropdown-option:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>新增销售记录</h1>
+    </div>
+    
+    <div class="content">
+        <div class="form-container">
+            <form id="add-sales-form">
+                <!-- 名称 -->
+                <div class="form-group">
+                    <label for="sales-name">名称 *</label>
+                    <input type="text" id="sales-name" name="name" required placeholder="请输入销售记录名称">
+                </div>
+                
+                <!-- 类型 -->
+                <div class="form-group">
+                    <label>类型 *</label>
+                    <div class="type-selector">
+                        <label>
+                            <input type="radio" name="type" value="purchase" checked>
+                            <span>进货</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="type" value="sale">
+                            <span>日常销售</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- 销售项目 -->
+                <div class="form-group">
+                    <label>销售项目</label>
+                    <div class="sales-items" id="sales-items">
+                        <!-- 项目将通过JavaScript动态添加 -->
+                    </div>
+                    <div style="text-align: right; margin-top: 0.5rem;">
+                        <button type="button" class="icon-button add-button" onclick="addSalesItem()" title="添加项目">+</button>
+                    </div>
+                </div>
+                
+                <!-- 备注 -->
+                <div class="form-group">
+                    <label for="sales-note">备注</label>
+                    <textarea id="sales-note" name="note" rows="3" placeholder="请输入备注"></textarea>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="bottom-fixed">
+        <div class="bottom-content">
+            <div class="total-amount" id="total-amount">
+                总合计：¥0.00
+            </div>
+            <div class="button-group">
+                <button type="submit" form="add-sales-form" class="action-button save-button">保存</button>
+                <button type="button" class="action-button cancel-button" onclick="window.location.href='main.html?tab=sales'">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        let allProjects = [];
+        let salesItems = [];
+        let itemIndex = 0;
+        
+        // 加载所有项目列表
+        function loadAllItems() {
+            fetch(`${API_BASE_URL}/api/projects`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allProjects = data.data;
+                    }
+                });
+        }
+        
+        // 添加销售项目
+        function addSalesItem() {
+            const salesItemsDiv = document.getElementById('sales-items');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'sales-item';
+            itemDiv.dataset.index = itemIndex;
+            
+            itemDiv.innerHTML = `
+                <div class="sales-item-header">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="sales-item-title">项目 ${itemIndex + 1}</span>
+                        <div class="system-item-checkbox">
+                            <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})">
+                            <label for="system-item-${itemIndex}">系统项目</label>
+                        </div>
+                    </div>
+                    <div class="remove-icon" onclick="removeSalesItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
+                </div>
+                <div class="sales-item-row">
+                    <div class="item-name-wrapper" style="flex: 1; position: relative;">
+                        <input type="text" class="item-name" data-index="${itemIndex}" placeholder="项目名称 *" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                    </div>
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量 *" min="1" step="1" value="1" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="flex: 0 0 80px; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
+                </div>
+                <div class="item-fields">
+                    <div class="item-fields-row">
+                        <input type="text" class="item-material" data-index="${itemIndex}" placeholder="材质">
+                        <input type="number" class="item-purchase-price" data-index="${itemIndex}" placeholder="进价" step="0.01">
+                        <input type="number" class="item-selling-price" data-index="${itemIndex}" placeholder="销售价 *" step="0.01">
+                    </div>
+                </div>
+            `;
+            
+            salesItemsDiv.appendChild(itemDiv);
+            
+            // 添加事件监听器
+            const quantityInput = itemDiv.querySelector('.item-quantity');
+            quantityInput.addEventListener('change', updateTotalAmount);
+            
+            const sellingPriceInput = itemDiv.querySelector('.item-selling-price');
+            sellingPriceInput.addEventListener('change', updateTotalAmount);
+            
+            // 初始化销售项目对象
+            salesItems.push({
+                index: itemIndex,
+                isSystemItem: false,
+                item_id: null,
+                name: '',
+                material: '',
+                purchase_price: 0,
+                selling_price: 0,
+                quantity: 1,
+                price: 0
+            });
+            
+            itemIndex++;
+        }
+        
+        // 删除销售项目
+        function removeSalesItem(index) {
+            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+            if (itemDiv) {
+                itemDiv.remove();
+                salesItems = salesItems.filter(item => item.index !== index);
+                updateTotalAmount();
+            }
+        }
+        
+        // 切换系统项目模式
+        function toggleSystemItem(index) {
+            const itemDiv = document.querySelector(`.sales-item[data-index="${index}"]`);
+            const checkbox = document.getElementById(`system-item-${index}`);
+            const nameInput = itemDiv.querySelector('.item-name');
+            const orderItem = salesItems.find(item => item.index === index);
+            
+            if (checkbox.checked) {
+                orderItem.isSystemItem = true;
+                nameInput.style.display = 'none';
+                createSearchableDropdown(itemDiv, index, orderItem);
+            } else {
+                orderItem.isSystemItem = false;
+                nameInput.style.display = 'block';
+                const dropdown = itemDiv.querySelector('.searchable-dropdown');
+                if (dropdown) {
+                    dropdown.remove();
+                }
+                orderItem.item_id = null;
+                const inputs = itemDiv.querySelectorAll('.item-material, .item-purchase-price, .item-selling-price');
+                inputs.forEach(input => input.disabled = false);
+            }
+        }
+        
+        // 创建可搜索的下拉框组件
+        function createSearchableDropdown(itemDiv, index, orderItem) {
+            let dropdown = itemDiv.querySelector('.searchable-dropdown');
+            if (dropdown) {
+                dropdown.remove();
+            }
+            
+            dropdown = document.createElement('div');
+            dropdown.className = 'searchable-dropdown';
+            
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'search-input';
+            searchInput.placeholder = '搜索系统项目...';
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
+            
+            const options = [];
+            allProjects.forEach(project => {
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('div');
+                        option.className = 'dropdown-option';
+                        option.dataset.value = material.id;
+                        option.dataset.projectName = project.name;
+                        option.dataset.material = material.material;
+                        option.dataset.purchasePrice = material.purchase_price;
+                        option.dataset.sellingPrice = material.selling_price;
+                        option.textContent = `${project.name} - ${material.material}`;
+                        
+                        option.addEventListener('click', function() {
+                            selectOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                        });
+                        
+                        options.push(option);
+                        optionsContainer.appendChild(option);
+                    });
+                }
+            });
+            
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            
+            const nameWrapper = itemDiv.querySelector('.item-name-wrapper');
+            nameWrapper.appendChild(dropdown);
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                optionsContainer.style.display = 'block';
+                options.forEach(option => {
+                    option.style.display = option.textContent.toLowerCase().includes(searchTerm) ? 'block' : 'none';
+                });
+            });
+            
+            searchInput.addEventListener('focus', function() {
+                optionsContainer.style.display = 'block';
+            });
+            
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    optionsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 选择选项
+        function selectOption(option, searchInput, optionsContainer, orderItem, itemDiv, index) {
+            const projectName = option.dataset.projectName;
+            const material = option.dataset.material;
+            const purchasePrice = option.dataset.purchasePrice;
+            const sellingPrice = option.dataset.sellingPrice;
+            
+            orderItem.isSystemItem = true;
+            orderItem.item_id = parseInt(option.dataset.value);
+            orderItem.name = projectName;
+            orderItem.material = material;
+            orderItem.purchase_price = parseFloat(purchasePrice);
+            orderItem.selling_price = parseFloat(sellingPrice);
+            orderItem.price = parseFloat(sellingPrice);
+            
+            itemDiv.querySelector('.item-material').value = material;
+            itemDiv.querySelector('.item-purchase-price').value = purchasePrice;
+            itemDiv.querySelector('.item-selling-price').value = sellingPrice;
+            
+            itemDiv.querySelector('.item-material').disabled = true;
+            itemDiv.querySelector('.item-purchase-price').disabled = true;
+            
+            searchInput.value = option.textContent;
+            optionsContainer.style.display = 'none';
+            
+            updateTotalAmount();
+        }
+        
+        // 更新总金额
+        function updateTotalAmount() {
+            let total = 0;
+            salesItems.forEach(item => {
+                const itemDiv = document.querySelector(`.sales-item[data-index="${item.index}"]`);
+                if (itemDiv) {
+                    const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 1;
+                    const sellingPrice = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
+                    total += quantity * sellingPrice;
+                }
+            });
+            document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
+        }
+        
+        // 表单提交
+        document.getElementById('add-sales-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('sales-name').value.trim();
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const note = document.getElementById('sales-note').value.trim();
+            
+            if (!name) {
+                alert('请输入名称');
+                document.getElementById('sales-name').focus();
+                return;
+            }
+            
+            const items = [];
+            for (const item of salesItems) {
+                const itemDiv = document.querySelector(`.sales-item[data-index="${item.index}"]`);
+                if (itemDiv) {
+                    const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
+                    const sellingPrice = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
+                    
+                    if (quantity <= 0) {
+                        alert('数量必须大于0');
+                        itemDiv.querySelector('.item-quantity').focus();
+                        return;
+                    }
+                    
+                    if (sellingPrice <= 0) {
+                        alert('销售价必须大于0');
+                        itemDiv.querySelector('.item-selling-price').focus();
+                        return;
+                    }
+                    
+                    let itemName = item.name;
+                    if (!item.isSystemItem) {
+                        itemName = itemDiv.querySelector('.item-name').value.trim();
+                        if (!itemName) {
+                            alert('请输入项目名称');
+                            itemDiv.querySelector('.item-name').focus();
+                            return;
+                        }
+                    }
+                    
+                    items.push({
+                        item_id: item.item_id,
+                        is_system_item: item.isSystemItem,
+                        name: itemName,
+                        material: itemDiv.querySelector('.item-material').value,
+                        purchase_price: parseFloat(itemDiv.querySelector('.item-purchase-price').value) || 0,
+                        selling_price: sellingPrice,
+                        quantity: quantity
+                    });
+                }
+            }
+            
+            if (items.length === 0) {
+                alert('请至少添加一个项目');
+                return;
+            }
+            
+            const data = {
+                name: name,
+                type: type,
+                note: note,
+                items: items
+            };
+            
+            fetch(`${API_BASE_URL}/api/sales`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('销售记录创建成功');
+                    window.location.href = 'main.html?tab=sales';
+                } else {
+                    alert('创建失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('网络错误，请重试');
+                console.error('Error:', error);
+            });
+        });
+        
+        // 初始化
+        window.onload = function() {
+            loadAllItems();
+            addSalesItem();
+        };
+    </script>
+</body>
+</html>
