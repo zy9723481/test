@@ -359,6 +359,88 @@ def get_orders():
     finally:
         connection.close()
 
+# 创建项目的辅助函数
+def create_project(cursor, project_name):
+    try:
+        print(f"=== create_project called with: {project_name} ===")
+        # 检查项目是否存在
+        cursor.execute('''
+        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+        ''', (project_name,))
+        project = cursor.fetchone()
+        print(f"Project check result: {project}")
+        
+        if not project:
+            # 创建新项目
+            print(f"Creating project: {project_name}")
+            # 先检查SQL语法
+            insert_sql = "INSERT INTO projects (name) VALUES (%s)"
+            print(f"Executing SQL: {insert_sql} with params: {project_name}")
+            
+            # 执行插入
+            cursor.execute(insert_sql, (project_name,))
+            
+            # 获取插入后的ID
+            project_id = cursor.lastrowid
+            print(f"Created project with id: {project_id}")
+            
+            # 验证插入是否成功
+            cursor.execute('''
+            SELECT id FROM projects WHERE id = %s AND is_deleted = 0
+            ''', (project_id,))
+            verify = cursor.fetchone()
+            print(f"Verification result: {verify}")
+            
+            if verify:
+                return project_id
+            else:
+                print(f"Project creation failed, verification returned None")
+                return 1
+        else:
+            print(f"Project already exists: {project}")
+            return project['id']
+    except Exception as e:
+        print(f"Error in create_project: {type(e).__name__}: {e}")
+        # 重新查询项目，确保返回有效ID
+        try:
+            cursor.execute('''
+            SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+            ''', (project_name,))
+            project = cursor.fetchone()
+            print(f"Retry project check result: {project}")
+            if project:
+                return project['id']
+        except Exception as e2:
+            print(f"Error in retry: {e2}")
+        return 1
+
+# 创建材质的辅助函数
+def create_material(cursor, project_id, material_name, purchase_price, selling_price, stock, note, source):
+    try:
+        # 检查材质是否存在
+        cursor.execute('''
+        SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+        ''', (project_id, material_name))
+        material = cursor.fetchone()
+        
+        if not material:
+            # 创建新材质
+            cursor.execute('''
+            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                project_id,
+                material_name,
+                purchase_price,
+                selling_price,
+                stock,
+                note,
+                source
+            ))
+            print(f"Created material: {material_name}")
+    except Exception as e:
+        print(f"Error in create_material: {e}")
+
 @app.route('/api/orders', methods=['POST'])
 def add_order():
     data = request.json
@@ -369,11 +451,106 @@ def add_order():
     
     connection = get_db_connection()
     try:
+        # 处理所有项目，包括系统项目和非系统项目
         with connection.cursor() as cursor:
             processed_items = []
             duplicate_items = []
+            
+            print("=== add_order function called ===")
+            print(f"Order items: {order_items}")
+            
             for item in order_items:
+                print(f"Processing item: {item}")
                 if not item.get('item_id') and item.get('name'):
+                    print(f"Processing non-system item: {item['name']}")
+                    # 检查项目是否存在于projects表中（无论是否存在于items表中）
+                    cursor.execute('''
+                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                    ''', (item['name'],))
+                    project = cursor.fetchone()
+                    print(f"Project check result: {project}")
+                    
+                    if not project:
+                        # 创建项目
+                        print(f"=== Creating project: {item['name']} ===")
+                        try:
+                            # 先检查SQL语法
+                            insert_sql = "INSERT INTO projects (name) VALUES (%s)"
+                            print(f"Executing SQL: {insert_sql} with params: {item['name']}")
+                            
+                            cursor.execute(insert_sql, (item['name'],))
+                            project_id = cursor.lastrowid
+                            print(f"Created project: {item['name']} with ID: {project_id}")
+                            
+                            # 验证插入是否成功
+                            cursor.execute('''
+                            SELECT id FROM projects WHERE id = %s AND is_deleted = 0
+                            ''', (project_id,))
+                            verify = cursor.fetchone()
+                            print(f"Verification result: {verify}")
+                            
+                            if verify:
+                                print(f"Project creation verification successful")
+                                # 更新project变量，确保后续逻辑使用正确的项目信息
+                                project = verify
+                                project_id = project['id']
+                            else:
+                                print(f"Project creation verification failed")
+                                # 尝试重新查询
+                                cursor.execute('''
+                                SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                                ''', (item['name'],))
+                                project = cursor.fetchone()
+                                if project:
+                                    project_id = project['id']
+                                    print(f"Found project after verification: {project_id}")
+                                else:
+                                    project_id = 1
+                                    print(f"Using default project ID: {project_id}")
+                        except Exception as e:
+                            print(f"Error creating project: {type(e).__name__}: {e}")
+                            # 重新查询项目，确保返回有效ID
+                            cursor.execute('''
+                            SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                            ''', (item['name'],))
+                            project = cursor.fetchone()
+                            print(f"Retry project check result: {project}")
+                            if project:
+                                project_id = project['id']
+                                print(f"Found existing project: {item['name']} with ID: {project_id}")
+                            else:
+                                project_id = 1
+                                print(f"Using default project ID: {project_id}")
+                    else:
+                        project_id = project['id']
+                        print(f"Project already exists: {item['name']} with ID: {project_id}")
+                    
+                    # 检查材质是否存在
+                    cursor.execute('''
+                    SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+                    ''', (project_id, item.get('material', '')))
+                    material = cursor.fetchone()
+                    
+                    if not material:
+                        # 创建材质
+                        try:
+                            cursor.execute('''
+                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            ''', (
+                                project_id,
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item.get('stock', 0),
+                                item.get('note'),
+                                'order_add'
+                            ))
+                            print(f"Created material: {item.get('material', '')}")
+                        except Exception as e:
+                            print(f"Error creating material: {e}")
+                    
+                    # 检查项目是否存在于items表中
                     if item.get('material'):
                         cursor.execute('''
                         SELECT * FROM items WHERE name = %s AND material = %s AND is_deleted = 0
@@ -393,6 +570,7 @@ def add_order():
                             'material': existing_item['material']
                         })
                     else:
+                        # 添加到 items 表
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_add')
@@ -436,18 +614,21 @@ def add_order():
                         }
                         processed_items.append(processed_item)
             
+            # 计算总金额
             total_amount = 0
             for item in processed_items:
                 total_amount += item['quantity'] * item['price']
             
             is_paid = 1 if paid_amount else 0
             
+            # 创建订单
             cursor.execute('''
             INSERT INTO orders (customer_name, phone, total_amount, paid_amount, is_paid)
             VALUES (%s, %s, %s, %s, %s)
             ''', (customer_name, phone, total_amount, paid_amount, is_paid))
             order_id = cursor.lastrowid
             
+            # 添加订单项目
             for item in processed_items:
                 cursor.execute('''
                 INSERT INTO order_items (order_id, item_id, name, material, purchase_price, selling_price, note, quantity, price)
@@ -458,7 +639,10 @@ def add_order():
                     item['quantity'], item['price']
                 ))
             
+            # 提交所有事务
             connection.commit()
+            print("Committed all transactions")
+            
             response = {
                 'success': True,
                 'message': '订单添加成功',
@@ -525,6 +709,63 @@ def update_order(order_id):
                             'material': existing_item['material']
                         })
                     else:
+                        # 检查项目是否存在于项目管理系统中
+                        cursor.execute('''
+                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                        ''', (item['name'],))
+                        project = cursor.fetchone()
+                        
+                        if not project:
+                            try:
+                                # 创建新项目
+                                print(f"Creating project: {item['name']}")
+                                cursor.execute('''
+                                INSERT INTO projects (name)
+                                VALUES (%s)
+                                ''', (item['name'],))
+                                project_id = cursor.lastrowid
+                                print(f"Created project with id: {project_id}")
+                            except Exception as e:
+                                # 处理项目名称重复的情况
+                                print(f"Error creating project: {e}")
+                                # 重新查询项目
+                                cursor.execute('''
+                                SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                                ''', (item['name'],))
+                                project = cursor.fetchone()
+                                if project:
+                                    project_id = project['id']
+                                    print(f"Found existing project with id: {project_id}")
+                                else:
+                                    # 如果仍然不存在，使用默认值
+                                    project_id = 1
+                                    print(f"Using default project id: {project_id}")
+                        else:
+                            project_id = project['id']
+                            print(f"Using existing project with id: {project_id}")
+                        
+                        # 检查材质是否存在
+                        cursor.execute('''
+                        SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+                        ''', (project_id, item.get('material', '')))
+                        material = cursor.fetchone()
+                        
+                        if not material:
+                            # 创建新材质
+                            cursor.execute('''
+                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            ''', (
+                                project_id,
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item.get('stock', 0),
+                                item.get('note'),
+                                'order_edit'
+                            ))
+                        
+                        # 添加到 items 表
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_edit')
@@ -592,6 +833,63 @@ def update_order(order_id):
                             'material': existing_item['material']
                         })
                     else:
+                        # 检查项目是否存在于项目管理系统中
+                        cursor.execute('''
+                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                        ''', (item['name'],))
+                        project = cursor.fetchone()
+                        
+                        if not project:
+                            try:
+                                # 创建新项目
+                                print(f"Creating project: {item['name']}")
+                                cursor.execute('''
+                                INSERT INTO projects (name)
+                                VALUES (%s)
+                                ''', (item['name'],))
+                                project_id = cursor.lastrowid
+                                print(f"Created project with id: {project_id}")
+                            except Exception as e:
+                                # 处理项目名称重复的情况
+                                print(f"Error creating project: {e}")
+                                # 重新查询项目
+                                cursor.execute('''
+                                SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                                ''', (item['name'],))
+                                project = cursor.fetchone()
+                                if project:
+                                    project_id = project['id']
+                                    print(f"Found existing project with id: {project_id}")
+                                else:
+                                    # 如果仍然不存在，使用默认值
+                                    project_id = 1
+                                    print(f"Using default project id: {project_id}")
+                        else:
+                            project_id = project['id']
+                            print(f"Using existing project with id: {project_id}")
+                        
+                        # 检查材质是否存在
+                        cursor.execute('''
+                        SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+                        ''', (project_id, item.get('material', '')))
+                        material = cursor.fetchone()
+                        
+                        if not material:
+                            # 创建新材质
+                            cursor.execute('''
+                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            ''', (
+                                project_id,
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item.get('stock', 0),
+                                item.get('note'),
+                                'order_edit'
+                            ))
+                        
+                        # 添加到 items 表
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
                         VALUES (%s, %s, %s, %s, %s, %s, 'order_edit')

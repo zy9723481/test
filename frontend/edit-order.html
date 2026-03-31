@@ -642,7 +642,7 @@
             itemDiv.dataset.index = itemIndex;
             
             // 查找对应的系统项目
-            const systemItem = allItems.find(i => i.id === item.item_id);
+            const systemItem = allProjects.find(project => project.materials && project.materials.some(material => material.id === item.item_id));
             const isSystemItem = !!systemItem;
             
             itemDiv.innerHTML = `
@@ -723,19 +723,23 @@
             const select = itemDiv.querySelector('.item-select');
             const currentIndex = itemIndex; // 保存当前索引
             
-            // 填充下拉框选项
-            allItems.forEach(i => {
-                const option = document.createElement('option');
-                option.value = i.id;
-                option.setAttribute('data-price', i.selling_price);
-                option.setAttribute('data-purchase-price', i.purchase_price);
-                option.setAttribute('data-material', i.material || '');
-                option.setAttribute('data-note', i.note || '');
-                option.textContent = i.name;
-                if (i.id === item.item_id) {
-                    option.selected = true;
+            // 填充下拉框选项 - 从所有项目的材质中获取
+            allProjects.forEach(project => {
+                if (project.materials) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('option');
+                        option.value = material.id;
+                        option.setAttribute('data-price', material.selling_price);
+                        option.setAttribute('data-purchase-price', material.purchase_price);
+                        option.setAttribute('data-material', material.material || '');
+                        option.setAttribute('data-note', material.note || '');
+                        option.textContent = `${project.name} - ${material.material}`;
+                        if (material.id === item.item_id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
                 }
-                select.appendChild(option);
             });
             
             select.addEventListener('change', function() {
@@ -867,7 +871,7 @@
             select.style.cssText = 'flex: 1; margin-top: 0.5rem;';
             select.innerHTML = `
                 <option value="">-- 请选择系统项目 --</option>
-                ${allItems.map(item => `<option value="${item.id}" data-price="${item.selling_price}" data-purchase-price="${item.purchase_price}" data-material="${item.material || ''}" data-note="${item.note || ''}">${item.name}</option>`).join('')}
+                ${allProjects.flatMap(project => project.materials ? project.materials.map(material => `<option value="${material.id}" data-price="${material.selling_price}" data-purchase-price="${material.purchase_price}" data-material="${material.material || ''}" data-note="${material.note || ''}">${project.name} - ${material.material}</option>`) : []).join('')}
             `;
             
             select.addEventListener('change', function() {
@@ -891,67 +895,44 @@
             }
             
             if (value) {
-                const projectId = parseInt(value);
-                const selectedProject = allProjects.find(project => project.id === projectId);
+                const selectedOption = select.options[select.selectedIndex];
+                const projectName = selectedOption.getAttribute('data-project-name');
+                const material = selectedOption.getAttribute('data-material');
+                const purchasePrice = selectedOption.getAttribute('data-purchase-price');
+                const sellingPrice = selectedOption.getAttribute('data-selling-price');
+                const note = selectedOption.getAttribute('data-note');
                 
-                if (selectedProject) {
-                    orderItem.name = selectedProject.name;
+                if (projectName) {
+                    orderItem.isSystemItem = true;
+                    orderItem.item_id = parseInt(value);
+                    orderItem.name = projectName;
+                    orderItem.material = material || '';
+                    orderItem.purchase_price = parseFloat(purchasePrice) || 0;
+                    orderItem.selling_price = parseFloat(sellingPrice) || 0;
+                    orderItem.note = note || '';
+                    orderItem.price = parseFloat(sellingPrice) || 0;
                     
-                    // 填充项目名称
-                    itemDiv.querySelector('.item-name').value = selectedProject.name;
+                    // 填充字段
+                    itemDiv.querySelector('.item-name').value = projectName;
+                    itemDiv.querySelector('.item-material').value = material || '';
+                    itemDiv.querySelector('.item-purchase-price').value = purchasePrice || '';
+                    itemDiv.querySelector('.item-selling-price').value = sellingPrice || '';
+                    itemDiv.querySelector('.item-note').value = note || '';
                     
-                    // 如果有材质，显示材质选择下拉框
-                    if (selectedProject.materials && selectedProject.materials.length > 0) {
-                        // 创建材质选择下拉框
-                        const materialSelect = document.createElement('select');
-                        materialSelect.className = 'material-select';
-                        materialSelect.style.marginTop = '0.5rem';
-                        materialSelect.style.width = '100%';
-                        materialSelect.style.padding = '0.5rem';
-                        materialSelect.style.border = '1px solid #ddd';
-                        materialSelect.style.borderRadius = '4px';
-                        
-                        // 添加材质选项
-                        selectedProject.materials.forEach((material, idx) => {
-                            const option = document.createElement('option');
-                            option.value = material.id;
-                            option.setAttribute('data-purchase-price', material.purchase_price);
-                            option.setAttribute('data-selling-price', material.selling_price);
-                            option.setAttribute('data-note', material.note || '');
-                            option.textContent = material.material;
-                            materialSelect.appendChild(option);
-                        });
-                        
-                        // 添加到页面
-                        const itemFields = itemDiv.querySelector(`#item-fields-${index}`);
-                        const materialField = itemFields.querySelector('.item-fields-row:first-child');
-                        materialField.appendChild(materialSelect);
-                        
-                        // 处理材质选择
-                        materialSelect.addEventListener('change', function() {
-                            handleMaterialSelect(this, index, selectedProject);
-                        });
-                        
-                        // 默认选择第一个材质
-                        if (materialSelect.options.length > 0) {
-                            materialSelect.selectedIndex = 0;
-                            handleMaterialSelect(materialSelect, index, selectedProject);
-                        }
-                    } else {
-                        // 没有材质时的处理
-                        orderItem.item_id = null;
-                        orderItem.material = '';
-                        orderItem.purchase_price = 0;
-                        orderItem.selling_price = 0;
-                        orderItem.note = '';
-                        orderItem.price = 0;
-                        
-                        // 填充字段
-                        itemDiv.querySelector('.item-material').value = '';
-                        itemDiv.querySelector('.item-purchase-price').value = '';
-                        itemDiv.querySelector('.item-selling-price').value = '';
-                        itemDiv.querySelector('.item-note').value = '';
-                    }
+                    // 禁用不可编辑字段（材质、进价、备注）
+                    itemDiv.querySelector('.item-material').disabled = true;
+                    itemDiv.querySelector('.item-purchase-price').disabled = true;
+                    itemDiv.querySelector('.item-note').disabled = true;
+                    
+                    // 销售价保持可编辑
+                    itemDiv.querySelector('.item-selling-price').disabled = false;
+                    
+                    // 添加销售价变更监听
+                    itemDiv.querySelector('.item-selling-price').onchange = function() {
+                        orderItem.selling_price = parseFloat(this.value) || 0;
+                        orderItem.price = parseFloat(this.value) || 0;
+                        updateTotalAmount();
+                    };
                 }
             } else {
                 orderItem.isSystemItem = false;
@@ -1057,13 +1038,27 @@
             defaultOption.textContent = '请选择系统项目';
             select.appendChild(defaultOption);
             
-            // 添加系统项目选项
+            // 添加系统项目选项 - 包含材质信息
             allProjects.forEach(project => {
-                const option = document.createElement('option');
-                option.value = project.id;
-                option.setAttribute('data-name', project.name);
-                option.textContent = project.name;
-                select.appendChild(option);
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('option');
+                        option.value = material.id;
+                        option.setAttribute('data-project-name', project.name);
+                        option.setAttribute('data-material', material.material);
+                        option.setAttribute('data-purchase-price', material.purchase_price);
+                        option.setAttribute('data-selling-price', material.selling_price);
+                        option.setAttribute('data-note', material.note || '');
+                        option.textContent = `${project.name} - ${material.material}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.setAttribute('data-project-name', project.name);
+                    option.textContent = project.name;
+                    select.appendChild(option);
+                }
             });
         }
         
@@ -1097,19 +1092,25 @@
                 // 切换到系统项目模式
                 orderItem.isSystemItem = true;
                 nameInput.style.display = 'none';
-                select.style.display = 'block';
-                
-                // 填充下拉框选项
-                fillSystemItemOptions(select);
+                select.style.display = 'none'; // 隐藏原始select
                 
                 // 清空已录入的内容
                 clearItemFields(index);
+                
+                // 创建可搜索的下拉框组件
+                createSearchableDropdown(itemDiv, index, orderItem);
             } else {
                 // 切换到自定义模式
                 orderItem.isSystemItem = false;
                 nameInput.style.display = 'block';
                 select.style.display = 'none';
                 select.value = '';
+                
+                // 移除搜索下拉框组件
+                const searchDropdown = itemDiv.querySelector('.searchable-dropdown');
+                if (searchDropdown) {
+                    searchDropdown.remove();
+                }
                 
                 // 清空系统项目数据
                 orderItem.item_id = null;
@@ -1122,6 +1123,161 @@
                 
                 updateTotalAmount();
             }
+        }
+        
+        // 创建可搜索的下拉框组件
+        function createSearchableDropdown(itemDiv, index, orderItem) {
+            // 检查是否已存在
+            let dropdown = itemDiv.querySelector('.searchable-dropdown');
+            if (dropdown) {
+                dropdown.remove();
+            }
+            
+            // 创建下拉框容器
+            dropdown = document.createElement('div');
+            dropdown.className = 'searchable-dropdown';
+            dropdown.style.cssText = 'position: relative; width: 100%;';
+            
+            // 创建搜索输入框
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'search-input';
+            searchInput.placeholder = '搜索系统项目...';
+            searchInput.style.cssText = 'width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;';
+            
+            // 创建选项容器
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
+            optionsContainer.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 0 0 4px 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 100; display: none;';
+            
+            // 填充选项
+            const options = [];
+            allProjects.forEach(project => {
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('div');
+                        option.className = 'dropdown-option';
+                        option.dataset.value = material.id;
+                        option.dataset.projectName = project.name;
+                        option.dataset.material = material.material;
+                        option.dataset.purchasePrice = material.purchase_price;
+                        option.dataset.sellingPrice = material.selling_price;
+                        option.dataset.note = material.note || '';
+                        option.textContent = `${project.name} - ${material.material}`;
+                        option.style.cssText = 'padding: 0.5rem 0.8rem; cursor: pointer; hover: background-color #f5f5f5;';
+                        
+                        // 添加点击事件
+                        option.addEventListener('click', function() {
+                            selectOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                        });
+                        
+                        options.push(option);
+                        optionsContainer.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('div');
+                    option.className = 'dropdown-option';
+                    option.dataset.value = project.id;
+                    option.dataset.projectName = project.name;
+                    option.textContent = project.name;
+                    option.style.cssText = 'padding: 0.5rem 0.8rem; cursor: pointer; hover: background-color #f5f5f5;';
+                    
+                    // 添加点击事件
+                    option.addEventListener('click', function() {
+                        selectOption(this, searchInput, optionsContainer, orderItem, itemDiv, index);
+                    });
+                    
+                    options.push(option);
+                    optionsContainer.appendChild(option);
+                }
+            });
+            
+            // 添加到容器
+            dropdown.appendChild(searchInput);
+            dropdown.appendChild(optionsContainer);
+            
+            // 添加到页面
+            const selectWrapper = itemDiv.querySelector('.item-name-wrapper');
+            selectWrapper.appendChild(dropdown);
+            
+            // 添加搜索事件
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                
+                // 显示选项容器
+                optionsContainer.style.display = 'block';
+                
+                // 过滤选项
+                options.forEach(option => {
+                    if (option.textContent.toLowerCase().includes(searchTerm)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+            
+            // 点击输入框显示选项
+            searchInput.addEventListener('focus', function() {
+                optionsContainer.style.display = 'block';
+            });
+            
+            // 点击外部关闭选项
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    optionsContainer.style.display = 'none';
+                }
+            });
+        }
+        
+        // 选择选项
+        function selectOption(option, searchInput, optionsContainer, orderItem, itemDiv, index) {
+            const value = option.dataset.value;
+            const projectName = option.dataset.projectName;
+            const material = option.dataset.material;
+            const purchasePrice = option.dataset.purchasePrice;
+            const sellingPrice = option.dataset.sellingPrice;
+            const note = option.dataset.note;
+            
+            // 更新输入框显示
+            searchInput.value = option.textContent;
+            
+            // 关闭选项容器
+            optionsContainer.style.display = 'none';
+            
+            // 更新订单项目数据
+            orderItem.isSystemItem = true;
+            orderItem.item_id = parseInt(value);
+            orderItem.name = projectName;
+            orderItem.material = material || '';
+            orderItem.purchase_price = parseFloat(purchasePrice) || 0;
+            orderItem.selling_price = parseFloat(sellingPrice) || 0;
+            orderItem.note = note || '';
+            orderItem.price = parseFloat(sellingPrice) || 0;
+            
+            // 填充字段
+            itemDiv.querySelector('.item-name').value = projectName;
+            itemDiv.querySelector('.item-material').value = material || '';
+            itemDiv.querySelector('.item-purchase-price').value = purchasePrice || '';
+            itemDiv.querySelector('.item-selling-price').value = sellingPrice || '';
+            itemDiv.querySelector('.item-note').value = note || '';
+            
+            // 禁用不可编辑字段（材质、进价、备注）
+            itemDiv.querySelector('.item-material').disabled = true;
+            itemDiv.querySelector('.item-purchase-price').disabled = true;
+            itemDiv.querySelector('.item-note').disabled = true;
+            
+            // 销售价保持可编辑
+            itemDiv.querySelector('.item-selling-price').disabled = false;
+            
+            // 添加销售价变更监听
+            itemDiv.querySelector('.item-selling-price').onchange = function() {
+                orderItem.selling_price = parseFloat(this.value) || 0;
+                orderItem.price = parseFloat(this.value) || 0;
+                updateTotalAmount();
+            };
+            
+            updateTotalAmount();
         }
         
         // 更新订单项目

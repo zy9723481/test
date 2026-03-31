@@ -788,13 +788,13 @@
             window.location.href = 'edit-item.html?id=' + itemId;
         }
         
-        // 创建删除确认模态框
-        function createDeleteModal(itemId) {
+        // 创建通用确认模态框
+        function createConfirmModal(message, confirmCallback, cancelCallback = null) {
             // 检查是否已存在模态框
-            let modal = document.getElementById('delete-modal');
+            let modal = document.getElementById('confirm-modal');
             if (!modal) {
                 modal = document.createElement('div');
-                modal.id = 'delete-modal';
+                modal.id = 'confirm-modal';
                 modal.className = 'modal';
                 modal.style.display = 'none';
                 modal.style.position = 'fixed';
@@ -817,7 +817,7 @@
                 
                 const modalMessage = document.createElement('p');
                 modalMessage.id = 'modal-message';
-                modalMessage.textContent = '确定要删除这个项目吗？';
+                modalMessage.textContent = message;
                 
                 const modalButtons = document.createElement('div');
                 modalButtons.className = 'modal-buttons';
@@ -838,47 +838,68 @@
                 cancelButton.style.color = '#333';
                 cancelButton.textContent = '取消';
                 
-                const deleteButton = document.createElement('button');
-                deleteButton.id = 'modal-delete';
-                deleteButton.className = 'delete-button';
-                deleteButton.style.flex = '1';
-                deleteButton.style.padding = '0.8rem';
-                deleteButton.style.border = 'none';
-                deleteButton.style.borderRadius = '4px';
-                deleteButton.style.fontSize = '1rem';
-                deleteButton.style.cursor = 'pointer';
-                deleteButton.style.backgroundColor = '#f44336';
-                deleteButton.style.color = 'white';
-                deleteButton.textContent = '删除';
+                const confirmButton = document.createElement('button');
+                confirmButton.id = 'modal-confirm';
+                confirmButton.className = 'confirm-button';
+                confirmButton.style.flex = '1';
+                confirmButton.style.padding = '0.8rem';
+                confirmButton.style.border = 'none';
+                confirmButton.style.borderRadius = '4px';
+                confirmButton.style.fontSize = '1rem';
+                confirmButton.style.cursor = 'pointer';
+                confirmButton.style.backgroundColor = '#4CAF50';
+                confirmButton.style.color = 'white';
+                confirmButton.textContent = '确认';
                 
                 modalButtons.appendChild(cancelButton);
-                modalButtons.appendChild(deleteButton);
+                modalButtons.appendChild(confirmButton);
                 modalContent.appendChild(modalMessage);
                 modalContent.appendChild(modalButtons);
                 modal.appendChild(modalContent);
                 document.body.appendChild(modal);
             }
             
+            // 更新消息
+            document.getElementById('modal-message').textContent = message;
+            
             // 显示模态框
             modal.style.display = 'block';
             
-            // 绑定删除按钮事件
-            document.getElementById('modal-delete').onclick = function() {
+            // 绑定确认按钮事件
+            document.getElementById('modal-confirm').onclick = function() {
                 modal.style.display = 'none';
-                performDelete(itemId);
+                if (confirmCallback) {
+                    confirmCallback();
+                }
             };
             
             // 绑定取消按钮事件
             document.getElementById('modal-cancel').onclick = function() {
                 modal.style.display = 'none';
+                if (cancelCallback) {
+                    cancelCallback();
+                }
             };
             
             // 点击外部关闭
             window.onclick = function(event) {
                 if (event.target == modal) {
                     modal.style.display = 'none';
+                    if (cancelCallback) {
+                        cancelCallback();
+                    }
                 }
             };
+        }
+
+        // 创建删除确认模态框（使用通用确认模态框）
+        function createDeleteModal(itemId) {
+            createConfirmModal(
+                '确定要删除这个项目吗？',
+                function() {
+                    performDelete(itemId);
+                }
+            );
         }
         
         // 执行删除操作
@@ -1093,95 +1114,12 @@
         
         // 删除订单
         function deleteOrder(orderId) {
-            // 创建删除确认模态框
-            let modal = document.getElementById('delete-order-modal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'delete-order-modal';
-                modal.className = 'modal';
-                modal.style.display = 'none';
-                modal.style.position = 'fixed';
-                modal.style.zIndex = '1000';
-                modal.style.left = '0';
-                modal.style.top = '0';
-                modal.style.width = '100%';
-                modal.style.height = '100%';
-                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                
-                const modalContent = document.createElement('div');
-                modalContent.className = 'modal-content';
-                modalContent.style.backgroundColor = 'white';
-                modalContent.style.margin = '15% auto';
-                modalContent.style.padding = '2rem';
-                modalContent.style.borderRadius = '8px';
-                modalContent.style.width = '90%';
-                modalContent.style.maxWidth = '400px';
-                modalContent.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
-                
-                const modalMessage = document.createElement('p');
-                modalMessage.id = 'delete-order-modal-message';
-                modalMessage.textContent = '确定要删除这个订单吗？';
-                
-                const modalButtons = document.createElement('div');
-                modalButtons.className = 'modal-buttons';
-                modalButtons.style.display = 'flex';
-                modalButtons.style.gap = '1rem';
-                modalButtons.style.marginTop = '1.5rem';
-                
-                const cancelButton = document.createElement('button');
-                cancelButton.id = 'delete-order-modal-cancel';
-                cancelButton.className = 'cancel-button';
-                cancelButton.style.flex = '1';
-                cancelButton.style.padding = '0.8rem';
-                cancelButton.style.border = 'none';
-                cancelButton.style.borderRadius = '4px';
-                cancelButton.style.fontSize = '1rem';
-                cancelButton.style.cursor = 'pointer';
-                cancelButton.style.backgroundColor = '#ccc';
-                cancelButton.style.color = '#333';
-                cancelButton.textContent = '取消';
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.id = 'delete-order-modal-delete';
-                deleteButton.className = 'delete-button';
-                deleteButton.style.flex = '1';
-                deleteButton.style.padding = '0.8rem';
-                deleteButton.style.border = 'none';
-                deleteButton.style.borderRadius = '4px';
-                deleteButton.style.fontSize = '1rem';
-                deleteButton.style.cursor = 'pointer';
-                deleteButton.style.backgroundColor = '#f44336';
-                deleteButton.style.color = 'white';
-                deleteButton.textContent = '删除';
-                
-                modalButtons.appendChild(cancelButton);
-                modalButtons.appendChild(deleteButton);
-                modalContent.appendChild(modalMessage);
-                modalContent.appendChild(modalButtons);
-                modal.appendChild(modalContent);
-                document.body.appendChild(modal);
-            }
-            
-            // 显示模态框
-            modal.style.display = 'block';
-            
-            // 绑定删除按钮事件
-            document.getElementById('delete-order-modal-delete').onclick = function() {
-                modal.style.display = 'none';
-                performDeleteOrder(orderId);
-            };
-            
-            // 绑定取消按钮事件
-            document.getElementById('delete-order-modal-cancel').onclick = function() {
-                modal.style.display = 'none';
-            };
-            
-            // 点击外部关闭
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
+            createConfirmModal(
+                '确定要删除这个订单吗？',
+                function() {
+                    performDeleteOrder(orderId);
                 }
-            };
+            );
         }
         
         // 执行删除订单操作
@@ -1491,53 +1429,59 @@
         
         // 删除材质
         function deleteMaterial(materialId) {
-            if (confirm('确定要删除这个材质吗？')) {
-                fetch(`${API_BASE_URL}/api/materials/${materialId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage('材质删除成功', true);
-                        loadItems();
-                    } else {
-                        showMessage('删除失败: ' + data.message, false);
-                    }
-                })
-                .catch(error => {
-                    showMessage('网络错误，请重试', false);
-                    console.error('Error:', error);
-                });
-            }
+            createConfirmModal(
+                '确定要删除这个材质吗？',
+                function() {
+                    fetch(`${API_BASE_URL}/api/materials/${materialId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage('材质删除成功', true);
+                            loadItems();
+                        } else {
+                            showMessage('删除失败: ' + data.message, false);
+                        }
+                    })
+                    .catch(error => {
+                        showMessage('网络错误，请重试', false);
+                        console.error('Error:', error);
+                    });
+                }
+            );
         }
         
         // 删除项目
         function deleteProject(projectId) {
-            if (confirm('确定要删除这个项目吗？所有关联的材质也会被删除。')) {
-                fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage('项目删除成功', true);
-                        loadItems();
-                        updateTabCounts();
-                    } else {
-                        showMessage('删除失败: ' + data.message, false);
-                    }
-                })
-                .catch(error => {
-                    showMessage('网络错误，请重试', false);
-                    console.error('Error:', error);
-                });
-            }
+            createConfirmModal(
+                '确定要删除这个项目吗？所有关联的材质也会被删除。',
+                function() {
+                    fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage('项目删除成功', true);
+                            loadItems();
+                            updateTabCounts();
+                        } else {
+                            showMessage('删除失败: ' + data.message, false);
+                        }
+                    })
+                    .catch(error => {
+                        showMessage('网络错误，请重试', false);
+                        console.error('Error:', error);
+                    });
+                }
+            );
         }
         
         // 初始化页面
