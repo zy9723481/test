@@ -7,7 +7,13 @@ pipeline {
                 cleanWs()
                 sh '''
                     git config --global http.sslVerify false
-                    git clone https://github.com/zy9723481/test.git . --depth 1 --single-branch
+                    git config --global credential.helper store
+                    # 先删除旧目录（如果存在）
+                    rm -rf .git
+                    # 克隆仓库
+                    git clone https://github.com/zy9723481/test.git .
+                    # 确保获取最新代码
+                    git pull origin main
                 '''
             }
         }
