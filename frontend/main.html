@@ -548,8 +548,269 @@
                 flex-direction: column;
             }
         }
+        
+        /* 报表统计样式 */
+        .report-section {
+            padding: 1rem;
+        }
+        
+        .report-filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-group {
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .date-range-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .date-range-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .date-range-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .date-range-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .date-inputs {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .date-inputs input {
+            flex: 1;
+        }
+        
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .stat-card.primary {
+            border-left: 4px solid #2196F3;
+        }
+        
+        .stat-card.success {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .stat-card.warning {
+            border-left: 4px solid #FF9800;
+        }
+        
+        .stat-card.info {
+            border-left: 4px solid #00BCD4;
+        }
+        
+        .stat-card.danger {
+            border-left: 4px solid #f44336;
+        }
+        
+        .stat-icon {
+            font-size: 2rem;
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .chart-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .chart-type-btn {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .chart-type-btn.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .chart-content {
+            position: relative;
+            height: 300px;
+        }
+        
+        .chart-content canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .data-tables {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .table-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .table-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .purchase-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .purchase-summary {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .purchase-summary span {
+            color: #666;
+        }
+        
+        .purchase-summary strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
     </style>
     <script src="js/logger.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="header">
@@ -566,8 +827,170 @@
             </div>
             
             <div class="tab-content" id="home-tab">
-                <h2>欢迎使用水暖管件管理系统</h2>
-                <p>这里将显示系统概览和报表信息</p>
+                <!-- 报表统计区域 -->
+                <div class="report-section">
+                    <!-- 时间筛选控件 -->
+                    <div class="report-filters">
+                        <div class="filter-group">
+                            <label>时间周期：</label>
+                            <div class="date-range-buttons">
+                                <button class="date-range-btn active" data-range="today">今天</button>
+                                <button class="date-range-btn" data-range="week">本周</button>
+                                <button class="date-range-btn" data-range="month">本月</button>
+                                <button class="date-range-btn" data-range="year">本年</button>
+                                <button class="date-range-btn" data-range="custom">自定义</button>
+                            </div>
+                        </div>
+                        <div class="filter-group custom-date-range" style="display: none;">
+                            <label>自定义时间：</label>
+                            <div class="date-inputs">
+                                <input type="date" id="report-start-date">
+                                <span>至</span>
+                                <input type="date" id="report-end-date">
+                                <button id="apply-date-range">应用</button>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>项目筛选：</label>
+                            <input type="text" id="report-project-filter" placeholder="输入项目名称（可选）">
+                        </div>
+                    </div>
+
+                    <!-- 总览统计卡片 -->
+                    <div class="overview-cards">
+                        <div class="stat-card primary">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <div class="stat-label">总销售额</div>
+                                <div class="stat-value" id="total-sales">¥0.00</div>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-content">
+                                <div class="stat-label">总盈利</div>
+                                <div class="stat-value" id="total-profit">¥0.00</div>
+                            </div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-icon">🛒</div>
+                            <div class="stat-content">
+                                <div class="stat-label">销售笔数</div>
+                                <div class="stat-value" id="sales-count">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-icon">📋</div>
+                            <div class="stat-content">
+                                <div class="stat-label">订单笔数</div>
+                                <div class="stat-value" id="order-count">0</div>
+                            </div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-content">
+                                <div class="stat-label">最畅销项目</div>
+                                <div class="stat-value" id="top-project">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表展示区域 -->
+                    <div class="charts-container">
+                        <div class="chart-section">
+                            <div class="chart-header">
+                                <h3>销售趋势</h3>
+                                <div class="chart-controls">
+                                    <button class="chart-type-btn active" data-type="bar">📊 柱状图</button>
+                                    <button class="chart-type-btn" data-type="line">📈 折线图</button>
+                                </div>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="sales-trend-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-section">
+                            <div class="chart-header">
+                                <h3>项目销售排行 TOP5</h3>
+                            </div>
+                            <div class="chart-content">
+                                <canvas id="top-projects-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 详细数据表格 -->
+                    <div class="data-tables">
+                        <div class="table-section">
+                            <div class="table-header">
+                                <h3>最畅销项目详情</h3>
+                            </div>
+                            <div class="table-content">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>项目名称</th>
+                                            <th>销售数量</th>
+                                            <th>销售金额</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-projects-table">
+                                        <!-- 动态生成 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="table-section">
+                            <div class="table-header">
+                                <h3>最畅销项目+材质 TOP5</h3>
+                            </div>
+                            <div class="table-content">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>项目-材质</th>
+                                            <th>销售数量</th>
+                                            <th>销售金额</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-materials-table">
+                                        <!-- 动态生成 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 进货情况 -->
+                    <div class="purchase-section">
+                        <div class="section-header">
+                            <h3>进货情况</h3>
+                            <div class="purchase-summary">
+                                <span>进货笔数：<strong id="purchase-count">0</strong></span>
+                                <span>进货金额：<strong id="purchase-amount">¥0.00</strong></span>
+                            </div>
+                        </div>
+                        <div class="table-content">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>进货名称</th>
+                                        <th>金额</th>
+                                        <th>备注</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="purchase-table">
+                                    <!-- 动态生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="tab-content hidden" id="items-tab">
@@ -2516,6 +2939,348 @@
         document.getElementById('sales-search-button').addEventListener('click', function() {
             const search = document.getElementById('sales-search').value.trim();
             loadSalesRecords(search);
+        });
+        
+        // ==================== 报表统计功能 ====================
+        
+        // 图表实例
+        let salesTrendChart = null;
+        let topProjectsChart = null;
+        let currentChartType = 'bar';
+        let currentDateRange = 'today';
+        
+        // 获取日期范围
+        function getDateRange(range) {
+            const today = new Date();
+            let startDate, endDate;
+            
+            switch(range) {
+                case 'today':
+                    startDate = endDate = today;
+                    break;
+                case 'week':
+                    const dayOfWeek = today.getDay();
+                    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    startDate = new Date(today.setDate(diff));
+                    endDate = new Date();
+                    break;
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'year':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                default:
+                    startDate = endDate = today;
+            }
+            
+            return {
+                start: startDate.toISOString().split('T')[0],
+                end: endDate.toISOString().split('T')[0]
+            };
+        }
+        
+        // 加载报表数据
+        function loadReportData() {
+            const dateRange = currentDateRange === 'custom' 
+                ? {
+                    start: document.getElementById('report-start-date').value,
+                    end: document.getElementById('report-end-date').value
+                }
+                : getDateRange(currentDateRange);
+            
+            if (!dateRange.start || !dateRange.end) {
+                Logger.warn('请选择有效的日期范围');
+                return;
+            }
+            
+            Logger.logRequest('/api/reports/overview', 'GET', { start_date: dateRange.start, end_date: dateRange.end });
+            
+            // 加载总览数据
+            fetch(`${API_BASE_URL}/api/reports/overview?start_date=${dateRange.start}&end_date=${dateRange.end}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Logger.logResponse('/api/reports/overview', true, '获取报表总览成功');
+                        updateOverviewCards(data.data);
+                        updateTopProjectsTable(data.data.top_projects);
+                        updateTopMaterialsTable(data.data.top_materials);
+                    } else {
+                        Logger.logResponse('/api/reports/overview', false, data.message);
+                    }
+                })
+                .catch(error => {
+                    Logger.logError('/api/reports/overview', error.message);
+                });
+            
+            // 加载项目趋势数据
+            loadProjectTrend(dateRange);
+            
+            // 加载进货数据
+            loadPurchaseData(dateRange);
+        }
+        
+        // 更新总览卡片
+        function updateOverviewCards(data) {
+            document.getElementById('total-sales').textContent = `¥${data.summary.total_sales.toFixed(2)}`;
+            document.getElementById('total-profit').textContent = `¥${data.summary.total_profit.toFixed(2)}`;
+            document.getElementById('sales-count').textContent = data.summary.sales_count;
+            document.getElementById('order-count').textContent = data.summary.order_count;
+            document.getElementById('top-project').textContent = data.top_projects.length > 0 ? data.top_projects[0].name : '-';
+        }
+        
+        // 更新最畅销项目表格
+        function updateTopProjectsTable(projects) {
+            const tbody = document.getElementById('top-projects-table');
+            tbody.innerHTML = '';
+            
+            projects.forEach((project, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${project.name}</td>
+                    <td>${project.total_quantity}</td>
+                    <td>¥${parseFloat(project.total_amount).toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 更新最畅销项目+材质表格
+        function updateTopMaterialsTable(materials) {
+            const tbody = document.getElementById('top-materials-table');
+            tbody.innerHTML = '';
+            
+            materials.forEach((material, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${material.name} - ${material.material}</td>
+                    <td>${material.total_quantity}</td>
+                    <td>¥${parseFloat(material.total_amount).toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 加载项目趋势数据
+        function loadProjectTrend(dateRange) {
+            const projectFilter = document.getElementById('report-project-filter').value.trim();
+            
+            let url = `${API_BASE_URL}/api/reports/project-trend?start_date=${dateRange.start}&end_date=${dateRange.end}`;
+            if (projectFilter) {
+                url += `&project_name=${encodeURIComponent(projectFilter)}`;
+            }
+            
+            Logger.logRequest('/api/reports/project-trend', 'GET', { start_date: dateRange.start, end_date: dateRange.end });
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Logger.logResponse('/api/reports/project-trend', true, `获取趋势数据成功，共${data.data.length}条`);
+                        renderSalesTrendChart(data.data);
+                        renderTopProjectsChart(data.data);
+                    } else {
+                        Logger.logResponse('/api/reports/project-trend', false, data.message);
+                    }
+                })
+                .catch(error => {
+                    Logger.logError('/api/reports/project-trend', error.message);
+                });
+        }
+        
+        // 渲染销售趋势图表
+        function renderSalesTrendChart(data) {
+            const ctx = document.getElementById('sales-trend-chart').getContext('2d');
+            
+            if (salesTrendChart) {
+                salesTrendChart.destroy();
+            }
+            
+            const labels = data.map(item => item.period);
+            const amounts = data.map(item => item.amount);
+            const profits = data.map(item => item.profit);
+            
+            salesTrendChart = new Chart(ctx, {
+                type: currentChartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '销售金额',
+                        data: amounts,
+                        backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                        borderColor: '#4CAF50',
+                        borderWidth: 2,
+                        fill: currentChartType === 'line'
+                    }, {
+                        label: '盈利',
+                        data: profits,
+                        backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                        borderColor: '#2196F3',
+                        borderWidth: 2,
+                        fill: currentChartType === 'line'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value.toFixed(0);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ¥' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 渲染TOP项目图表
+        function renderTopProjectsChart(data) {
+            const ctx = document.getElementById('top-projects-chart').getContext('2d');
+            
+            if (topProjectsChart) {
+                topProjectsChart.destroy();
+            }
+            
+            // 取前5条数据
+            const topData = data.slice(0, 5);
+            const labels = topData.map(item => item.period);
+            const quantities = topData.map(item => item.quantity);
+            
+            topProjectsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '销售数量',
+                        data: quantities,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 加载进货数据
+        function loadPurchaseData(dateRange) {
+            Logger.logRequest('/api/reports/purchase-summary', 'GET', { start_date: dateRange.start, end_date: dateRange.end });
+            
+            fetch(`${API_BASE_URL}/api/reports/purchase-summary?start_date=${dateRange.start}&end_date=${dateRange.end}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Logger.logResponse('/api/reports/purchase-summary', true, `获取进货数据成功，共${data.data.details.length}条`);
+                        document.getElementById('purchase-count').textContent = data.data.summary.total_count;
+                        document.getElementById('purchase-amount').textContent = `¥${data.data.summary.total_amount.toFixed(2)}`;
+                        
+                        const tbody = document.getElementById('purchase-table');
+                        tbody.innerHTML = '';
+                        
+                        data.data.details.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${formatDateTime(item.created_at)}</td>
+                                <td>${item.name}</td>
+                                <td>¥${parseFloat(item.total_amount).toFixed(2)}</td>
+                                <td>${item.note || '-'}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        Logger.logResponse('/api/reports/purchase-summary', false, data.message);
+                    }
+                })
+                .catch(error => {
+                    Logger.logError('/api/reports/purchase-summary', error.message);
+                });
+        }
+        
+        // 日期范围按钮事件
+        document.querySelectorAll('.date-range-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.date-range-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentDateRange = this.dataset.range;
+                
+                if (currentDateRange === 'custom') {
+                    document.querySelector('.custom-date-range').style.display = 'block';
+                } else {
+                    document.querySelector('.custom-date-range').style.display = 'none';
+                    loadReportData();
+                }
+            });
+        });
+        
+        // 应用自定义日期
+        document.getElementById('apply-date-range').addEventListener('click', function() {
+            loadReportData();
+        });
+        
+        // 图表类型切换
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentChartType = this.dataset.type;
+                loadReportData();
+            });
+        });
+        
+        // 项目筛选输入框事件
+        document.getElementById('report-project-filter').addEventListener('input', function() {
+            // 延迟加载，避免频繁请求
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                loadReportData();
+            }, 500);
+        });
+        
+        // 页面加载时初始化报表
+        window.addEventListener('load', function() {
+            // 如果有报表区域，则加载数据
+            if (document.getElementById('home-tab')) {
+                loadReportData();
+            }
         });
     </script>
 </body>

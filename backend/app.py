@@ -1544,6 +1544,395 @@ def delete_sales_record(sales_id):
         log_error(logger, endpoint, str(e), exc_info=True)
         return jsonify({'success': False, 'message': f'删除失败: {str(e)}'})
 
+# ==================== 报表统计API ====================
+
+@app.route('/api/reports/overview', methods=['GET'])
+def get_report_overview():
+    """获取报表总览数据"""
+    endpoint = '/api/reports/overview'
+    method = 'GET'
+    
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        log_request(logger, endpoint, method, params={'start_date': start_date, 'end_date': end_date})
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                # 构建时间范围条件
+                date_condition = ""
+                params = []
+                if start_date and end_date:
+                    date_condition = " AND DATE(created_at) BETWEEN %s AND %s"
+                    params = [start_date, end_date]
+                elif start_date:
+                    date_condition = " AND DATE(created_at) >= %s"
+                    params = [start_date]
+                elif end_date:
+                    date_condition = " AND DATE(created_at) <= %s"
+                    params = [end_date]
+                
+                # 1. 销售统计（来自销售记录）
+                cursor.execute(f"""
+                    SELECT 
+                        COUNT(*) as total_count,
+                        COALESCE(SUM(total_amount), 0) as total_amount,
+                        COALESCE(SUM(CASE WHEN type = 'sale' THEN total_amount ELSE 0 END), 0) as sale_amount,
+                        COALESCE(SUM(CASE WHEN type = 'purchase' THEN total_amount ELSE 0 END), 0) as purchase_amount
+                    FROM sales_records 
+                    WHERE is_deleted = 0 {date_condition}
+                """, params)
+                sales_stats = cursor.fetchone()
+                
+                # 2. 订单统计（仅统计已结账的订单，按结账时间）
+                order_date_condition = date_condition.replace('created_at', 'paid_at')
+                cursor.execute(f"""
+                    SELECT 
+                        COUNT(*) as total_count,
+                        COALESCE(SUM(total_amount), 0) as total_amount
+                    FROM orders 
+                    WHERE is_paid = 1 {order_date_condition}
+                """, params)
+                order_stats = cursor.fetchone()
+                
+                # 3. 总销售额 = 销售记录销售 + 订单销售
+                total_sales = float(sales_stats['sale_amount'] or 0) + float(order_stats['total_amount'] or 0)
+                
+                # 4. 计算盈利（销售记录中的销售 - 进货成本 + 订单盈利）
+                # 销售记录盈利
+                cursor.execute(f"""
+                    SELECT 
+                        COALESCE(SUM(CASE WHEN type = 'sale' THEN 
+                            (SELECT SUM(si.selling_price * si.quantity - si.purchase_price * si.quantity) 
+                             FROM sales_items si WHERE si.sales_id = sr.id)
+                        ELSE 0 END), 0) as sale_profit,
+                        COALESCE(SUM(CASE WHEN type = 'purchase' THEN total_amount ELSE 0 END), 0) as purchase_cost
+                    FROM sales_records sr
+                    WHERE sr.is_deleted = 0 {date_condition}
+                """, params)
+                sales_profit = cursor.fetchone()
+                
+                # 订单盈利（仅已结账订单）
+                cursor.execute(f"""
+                    SELECT 
+                        COALESCE(SUM(oi.selling_price * oi.quantity - oi.purchase_price * oi.quantity), 0) as order_profit
+                    FROM orders o
+                    JOIN order_items oi ON o.id = oi.order_id
+                    WHERE o.is_paid = 1 {order_date_condition}
+                """, params)
+                order_profit = cursor.fetchone()
+                
+                total_profit = float(sales_profit['sale_profit'] or 0) + float(order_profit['order_profit'] or 0)
+                
+                # 5. 最畅销项目（销售记录 + 订单）
+                cursor.execute(f"""
+                    SELECT name, SUM(total_quantity) as total_quantity, SUM(total_amount) as total_amount
+                    FROM (
+                        SELECT si.name, SUM(si.quantity) as total_quantity, SUM(si.selling_price * si.quantity) as total_amount
+                        FROM sales_records sr
+                        JOIN sales_items si ON sr.id = si.sales_id
+                        WHERE sr.type = 'sale' AND sr.is_deleted = 0 {date_condition.replace('created_at', 'sr.created_at')}
+                        GROUP BY si.name
+                        UNION ALL
+                        SELECT oi.name, SUM(oi.quantity) as total_quantity, SUM(oi.selling_price * oi.quantity) as total_amount
+                        FROM orders o
+                        JOIN order_items oi ON o.id = oi.order_id
+                        WHERE o.is_paid = 1 {order_date_condition.replace('paid_at', 'o.paid_at')}
+                        GROUP BY oi.name
+                    ) combined
+                    GROUP BY name
+                    ORDER BY total_quantity DESC
+                    LIMIT 5
+                """, params + params)
+                top_projects = cursor.fetchall()
+                
+                # 6. 最畅销项目+材质组合
+                cursor.execute(f"""
+                    SELECT name, material, SUM(total_quantity) as total_quantity, SUM(total_amount) as total_amount
+                    FROM (
+                        SELECT si.name, si.material, SUM(si.quantity) as total_quantity, SUM(si.selling_price * si.quantity) as total_amount
+                        FROM sales_records sr
+                        JOIN sales_items si ON sr.id = si.sales_id
+                        WHERE sr.type = 'sale' AND sr.is_deleted = 0 {date_condition.replace('created_at', 'sr.created_at')}
+                        GROUP BY si.name, si.material
+                        UNION ALL
+                        SELECT oi.name, oi.material, SUM(oi.quantity) as total_quantity, SUM(oi.selling_price * oi.quantity) as total_amount
+                        FROM orders o
+                        JOIN order_items oi ON o.id = oi.order_id
+                        WHERE o.is_paid = 1 {order_date_condition.replace('paid_at', 'o.paid_at')}
+                        GROUP BY oi.name, oi.material
+                    ) combined
+                    GROUP BY name, material
+                    ORDER BY total_quantity DESC
+                    LIMIT 5
+                """, params + params)
+                top_materials = cursor.fetchall()
+                
+                result = {
+                    'success': True,
+                    'data': {
+                        'summary': {
+                            'total_sales': total_sales,
+                            'total_profit': total_profit,
+                            'sales_count': sales_stats['total_count'],
+                            'order_count': order_stats['total_count'],
+                            'purchase_cost': float(sales_stats['purchase_amount'] or 0)
+                        },
+                        'top_projects': list(top_projects),
+                        'top_materials': list(top_materials)
+                    }
+                }
+                
+                log_response(logger, endpoint, True, '获取报表总览成功')
+                return jsonify(result)
+        finally:
+            connection.close()
+    except Exception as e:
+        log_error(logger, endpoint, str(e), exc_info=True)
+        return jsonify({'success': False, 'message': f'获取报表失败: {str(e)}'})
+
+@app.route('/api/reports/project-trend', methods=['GET'])
+def get_project_trend():
+    """获取项目销售趋势（按日/月/年统计）"""
+    endpoint = '/api/reports/project-trend'
+    method = 'GET'
+    
+    try:
+        project_name = request.args.get('project_name')
+        material = request.args.get('material')
+        period = request.args.get('period', 'day')  # day, month, year
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        log_request(logger, endpoint, method, params={
+            'project_name': project_name, 'material': material, 'period': period
+        })
+        
+        if not project_name:
+            return jsonify({'success': False, 'message': '项目名称不能为空'})
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                # 构建时间格式
+                if period == 'day':
+                    date_format = '%Y-%m-%d'
+                elif period == 'month':
+                    date_format = '%Y-%m'
+                else:
+                    date_format = '%Y'
+                
+                # 构建查询条件
+                conditions = ["si.name = %s"]
+                params = [project_name]
+                
+                if material:
+                    conditions.append("si.material = %s")
+                    params.append(material)
+                
+                if start_date and end_date:
+                    conditions.append("DATE(sr.created_at) BETWEEN %s AND %s")
+                    params.extend([start_date, end_date])
+                
+                where_clause = " AND ".join(conditions)
+                
+                # 查询销售趋势
+                cursor.execute(f"""
+                    SELECT 
+                        DATE_FORMAT(sr.created_at, %s) as period,
+                        SUM(si.quantity) as total_quantity,
+                        SUM(si.selling_price * si.quantity) as total_amount,
+                        SUM(si.selling_price * si.quantity - si.purchase_price * si.quantity) as profit
+                    FROM sales_records sr
+                    JOIN sales_items si ON sr.id = si.sales_id
+                    WHERE sr.type = 'sale' AND sr.is_deleted = 0 AND {where_clause}
+                    GROUP BY period
+                    ORDER BY period
+                """, [date_format] + params)
+                
+                sales_trend = cursor.fetchall()
+                
+                # 查询订单趋势
+                order_conditions = ["oi.name = %s"]
+                order_params = [project_name]
+                
+                if material:
+                    order_conditions.append("oi.material = %s")
+                    order_params.append(material)
+                
+                if start_date and end_date:
+                    order_conditions.append("DATE(o.paid_at) BETWEEN %s AND %s")
+                    order_params.extend([start_date, end_date])
+                
+                order_where = " AND ".join(order_conditions)
+                
+                cursor.execute(f"""
+                    SELECT 
+                        DATE_FORMAT(o.paid_at, %s) as period,
+                        SUM(oi.quantity) as total_quantity,
+                        SUM(oi.selling_price * oi.quantity) as total_amount,
+                        SUM(oi.selling_price * oi.quantity - oi.purchase_price * oi.quantity) as profit
+                    FROM orders o
+                    JOIN order_items oi ON o.id = oi.order_id
+                    WHERE o.is_paid = 1 AND {order_where}
+                    GROUP BY period
+                    ORDER BY period
+                """, [date_format] + order_params)
+                
+                order_trend = cursor.fetchall()
+                
+                # 合并数据
+                trend_dict = {}
+                for item in sales_trend:
+                    period_key = item['period']
+                    if period_key not in trend_dict:
+                        trend_dict[period_key] = {'period': period_key, 'quantity': 0, 'amount': 0, 'profit': 0}
+                    trend_dict[period_key]['quantity'] += float(item['total_quantity'] or 0)
+                    trend_dict[period_key]['amount'] += float(item['total_amount'] or 0)
+                    trend_dict[period_key]['profit'] += float(item['profit'] or 0)
+                
+                for item in order_trend:
+                    period_key = item['period']
+                    if period_key not in trend_dict:
+                        trend_dict[period_key] = {'period': period_key, 'quantity': 0, 'amount': 0, 'profit': 0}
+                    trend_dict[period_key]['quantity'] += float(item['total_quantity'] or 0)
+                    trend_dict[period_key]['amount'] += float(item['total_amount'] or 0)
+                    trend_dict[period_key]['profit'] += float(item['profit'] or 0)
+                
+                # 转换为列表并排序
+                trend_list = sorted(trend_dict.values(), key=lambda x: x['period'])
+                
+                log_response(logger, endpoint, True, f'获取项目趋势成功，共{len(trend_list)}条数据')
+                return jsonify({
+                    'success': True,
+                    'data': trend_list
+                })
+        finally:
+            connection.close()
+    except Exception as e:
+        log_error(logger, endpoint, str(e), exc_info=True)
+        return jsonify({'success': False, 'message': f'获取趋势失败: {str(e)}'})
+
+@app.route('/api/reports/price-trend', methods=['GET'])
+def get_price_trend():
+    """获取价格趋势（根据轨迹表）"""
+    endpoint = '/api/reports/price-trend'
+    method = 'GET'
+    
+    try:
+        project_name = request.args.get('project_name')
+        material = request.args.get('material')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        log_request(logger, endpoint, method, params={
+            'project_name': project_name, 'material': material
+        })
+        
+        if not project_name or not material:
+            return jsonify({'success': False, 'message': '项目名称和材质不能为空'})
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                conditions = ["project_name = %s", "material = %s"]
+                params = [project_name, material]
+                
+                if start_date and end_date:
+                    conditions.append("DATE(update_time) BETWEEN %s AND %s")
+                    params.extend([start_date, end_date])
+                
+                where_clause = " AND ".join(conditions)
+                
+                cursor.execute(f"""
+                    SELECT 
+                        DATE_FORMAT(update_time, '%Y-%m-%d') as date,
+                        purchase_price,
+                        selling_price,
+                        update_method
+                    FROM price_history
+                    WHERE {where_clause}
+                    ORDER BY update_time
+                """, params)
+                
+                price_trend = cursor.fetchall()
+                
+                log_response(logger, endpoint, True, f'获取价格趋势成功，共{len(price_trend)}条数据')
+                return jsonify({
+                    'success': True,
+                    'data': list(price_trend)
+                })
+        finally:
+            connection.close()
+    except Exception as e:
+        log_error(logger, endpoint, str(e), exc_info=True)
+        return jsonify({'success': False, 'message': f'获取价格趋势失败: {str(e)}'})
+
+@app.route('/api/reports/purchase-summary', methods=['GET'])
+def get_purchase_summary():
+    """获取进货汇总统计"""
+    endpoint = '/api/reports/purchase-summary'
+    method = 'GET'
+    
+    try:
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        log_request(logger, endpoint, method, params={'start_date': start_date, 'end_date': end_date})
+        
+        connection = get_db_connection()
+        try:
+            with connection.cursor() as cursor:
+                conditions = ["type = 'purchase'", "is_deleted = 0"]
+                params = []
+                
+                if start_date and end_date:
+                    conditions.append("DATE(created_at) BETWEEN %s AND %s")
+                    params.extend([start_date, end_date])
+                
+                where_clause = " AND ".join(conditions)
+                
+                # 汇总统计
+                cursor.execute(f"""
+                    SELECT 
+                        COUNT(*) as total_count,
+                        COALESCE(SUM(total_amount), 0) as total_amount
+                    FROM sales_records
+                    WHERE {where_clause}
+                """, params)
+                
+                summary = cursor.fetchone()
+                
+                # 明细列表
+                cursor.execute(f"""
+                    SELECT 
+                        id, name, total_amount, note, created_at
+                    FROM sales_records
+                    WHERE {where_clause}
+                    ORDER BY created_at DESC
+                """, params)
+                
+                details = cursor.fetchall()
+                
+                log_response(logger, endpoint, True, f'获取进货汇总成功，共{len(details)}条记录')
+                return jsonify({
+                    'success': True,
+                    'data': {
+                        'summary': {
+                            'total_count': summary['total_count'],
+                            'total_amount': float(summary['total_amount'] or 0)
+                        },
+                        'details': list(details)
+                    }
+                })
+        finally:
+            connection.close()
+    except Exception as e:
+        log_error(logger, endpoint, str(e), exc_info=True)
+        return jsonify({'success': False, 'message': f'获取进货汇总失败: {str(e)}'})
+
 if __name__ == '__main__':
     logger.info("【系统】Flask 应用启动")
     app.run(debug=True, host='0.0.0.0', port=5000)

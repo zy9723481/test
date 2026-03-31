@@ -105,6 +105,14 @@ def init_database():
                 # 字段已存在，忽略错误
                 pass
             
+            # 尝试添加paid_at字段（结账时间）
+            try:
+                cursor.execute('''
+                ALTER TABLE orders ADD COLUMN paid_at TIMESTAMP NULL COMMENT '结账时间'
+                ''')
+            except:
+                pass
+            
             # 创建订单项目关联表
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS order_items (
