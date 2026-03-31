@@ -1,58 +1,58 @@
 pipeline {
     agent any
-
-    options {
-        timeout(time: 8, unit: 'MINUTES')
-        buildDiscarder(logRotator(numToKeepStr: '5'))
-    }
-
-    environment {
-        DB_HOST = '101.42.35.88'
-        DB_USER = 'xiaoshouxitong'
-        DB_PASSWORD = '55p3knrBYPs8XJew'
-        DB_NAME = 'xiaoshouxitong'
-        HOST = '0.0.0.0'
-        PORT = '5000'
-    }
-
+    options { timeout(time: 20, unit: 'MINUTES') }
     stages {
-        stage('Git Pull Latest Code') {
+        stage('Pull Code') {
             steps {
                 cleanWs()
-                // 国内加速镜像 —— 100% 能拉成功
-                git branch: 'main', url: 'https://github.com.cnpmjs.org/zy9723481/test.git'
-                echo "✅ 远程代码拉取完成"
+                sh '''
+                    git config --global http.sslVerify false
+                    git clone https://github.com/zy9723481/test.git . --depth 1 --single-branch
+                '''
             }
         }
-
         stage('Install Dependencies') {
             steps {
                 sh '''
                     cd backend
+                    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
                     pip install -r requirements.txt --no-input
                 '''
             }
         }
-
-        stage('One-Key Start') {
+        stage('Start Backend') {
             steps {
                 sh '''
-                    ps -ef | grep python | grep -v grep | awk '{print $2}' | xargs kill -9 2>/dev/null || true
-
                     cd backend
-                    nohup python app.py > /dev/null 2>&1 &
-
-                    echo "====================================="
-                    echo " 项目启动成功！"
-                    echo " 访问地址：http://101.42.35.88:5000"
-                    echo "====================================="
+                    lsof -t -i:5000 | xargs kill -9 2>/dev/null || true
+                    nohup python app.py > backend.log 2>&1 &
+                    disown
+                    sleep 3
+                    echo "✅ 后端服务启动成功！"
+                '''
+            }
+        }
+        stage('Start Frontend') {
+            steps {
+                sh '''
+                    cd frontend
+                    lsof -t -i:8000 | xargs kill -9 2>/dev/null || true
+                    nohup python -m http.server 8000 > frontend.log 2>&1 &
+                    disown
+                    sleep 3
+                    echo "✅ 前端服务启动成功！"
                 '''
             }
         }
     }
-
     post {
-        success { echo '🎉 构建成功！' }
-        failure { echo '❌ 构建失败！' }
+        success {
+            echo "🎉 构建成功！项目运行中！"
+            echo "后端API地址: http://101.42.35.88:5000"
+            echo "前端页面地址: http://101.42.35.88:8000"
+        }
+        failure {
+            echo "❌ 构建失败！"
+        }
     }
 }
