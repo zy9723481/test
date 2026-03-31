@@ -272,6 +272,7 @@
             background-color: #f5f5f5;
         }
     </style>
+    <script src="js/logger.js"></script>
 </head>
 <body>
     <div class="header">
@@ -646,6 +647,8 @@
                 items: items
             };
             
+            Logger.logRequest('/api/sales', 'POST', { name: name, type: type, item_count: items.length });
+            
             fetch(`${API_BASE_URL}/api/sales`, {
                 method: 'POST',
                 headers: {
@@ -656,15 +659,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    Logger.logResponse('/api/sales', true, '销售记录创建成功', { id: data.id });
                     showMessage('销售记录创建成功');
                     window.location.href = 'main.html?tab=sales';
                 } else {
+                    Logger.logResponse('/api/sales', false, data.message);
                     showMessage('创建失败: ' + data.message, false);
                 }
             })
             .catch(error => {
+                Logger.logError('/api/sales', error.message);
                 showMessage('网络错误，请重试', false);
-                console.error('Error:', error);
             });
         });
         

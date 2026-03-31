@@ -74,6 +74,7 @@
             margin-top: 1rem;
         }
     </style>
+    <script src="js/logger.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -105,6 +106,8 @@
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
             
+            Logger.logRequest('/api/login', 'POST', { username: username });
+            
             fetch(`${API_BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: {
@@ -115,14 +118,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    Logger.logResponse('/api/login', true, '登录成功');
                     window.location.href = 'main.html';
                 } else {
+                    Logger.logResponse('/api/login', false, data.message);
                     errorMessage.textContent = data.message;
                 }
             })
             .catch(error => {
+                Logger.logError('/api/login', error.message);
                 errorMessage.textContent = '登录失败，请检查网络连接';
-                console.error('Error:', error);
             });
         });
     </script>

@@ -549,6 +549,7 @@
             }
         }
     </style>
+    <script src="js/logger.js"></script>
 </head>
 <body>
     <div class="header">
@@ -832,7 +833,7 @@
         // API基础URL配置 - 可手动切换
         // 本地开发使用: 'http://localhost:5000'
         // 服务器使用: 'http://101.42.35.88:5000'
-        const API_BASE_URL = 'http://localhost:5000';
+        const API_BASE_URL = 'http://101.42.35.88:5000';
         
         // 根据URL参数切换页签
         function switchTabByUrl() {
@@ -1095,10 +1096,12 @@
         
         // 加载订单列表
         function loadOrders(searchTerm = '', startDate = '', endDate = '') {
+            Logger.logRequest('/api/orders', 'GET', { search: searchTerm, startDate, endDate });
             fetch(`${API_BASE_URL}/api/orders`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        Logger.logResponse('/api/orders', true, `获取到 ${data.data.length} 个订单`);
                         const orderList = document.getElementById('order-list');
                         orderList.innerHTML = '';
                         
@@ -1155,7 +1158,12 @@
                             `;
                             orderList.appendChild(orderCard);
                         });
+                    } else {
+                        Logger.logResponse('/api/orders', false, data.message);
                     }
+                })
+                .catch(error => {
+                    Logger.logError('/api/orders', error.message);
                 });
         }
         
@@ -1660,6 +1668,7 @@
         
         // 加载项目列表（支持搜索）
         function loadItems(searchTerm = '') {
+            Logger.logRequest('/api/projects', 'GET', { name: searchTerm });
             let url = `${API_BASE_URL}/api/projects`;
             if (searchTerm) {
                 url += `?name=${encodeURIComponent(searchTerm)}`;
@@ -1668,6 +1677,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        Logger.logResponse('/api/projects', true, `获取到 ${data.data.length} 个项目`);
                         const itemList = document.getElementById('item-list');
                         itemList.innerHTML = '';
                         
@@ -1679,7 +1689,12 @@
                         data.data.forEach(project => {
                             createProjectCard(project);
                         });
+                    } else {
+                        Logger.logResponse('/api/projects', false, data.message);
                     }
+                })
+                .catch(error => {
+                    Logger.logError('/api/projects', error.message);
                 });
         }
         
@@ -1843,6 +1858,7 @@
         
         // 加载销售记录列表
         function loadSalesRecords(search = '') {
+            Logger.logRequest('/api/sales', 'GET', { search: search });
             const salesList = document.getElementById('sales-list');
             salesList.innerHTML = '<p style="text-align: center; color: #999;">加载中...</p>';
             
@@ -1855,6 +1871,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        Logger.logResponse('/api/sales', true, `获取到 ${data.data.length} 条销售记录`);
                         salesList.innerHTML = '';
                         
                         if (data.data.length === 0) {
@@ -1889,11 +1906,12 @@
                             salesList.appendChild(recordCard);
                         });
                     } else {
+                        Logger.logResponse('/api/sales', false, data.message);
                         salesList.innerHTML = '<p style="text-align: center; color: #999;">加载失败</p>';
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    Logger.logError('/api/sales', error.message);
                     salesList.innerHTML = '<p style="text-align: center; color: #999;">网络错误</p>';
                 });
         }
