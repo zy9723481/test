@@ -222,6 +222,11 @@
             color: #333;
         }
         
+        .preview-button {
+            background-color: #2196F3;
+            color: white;
+        }
+        
         .add-item-button {
             background-color: #2196F3;
             color: white;
@@ -241,6 +246,184 @@
         
         button:hover {
             opacity: 0.9;
+        }
+        
+        /* 预览模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-button:hover {
+            color: #333;
+        }
+        
+        .preview-order-header {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .preview-order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .preview-order-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-order-info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+        }
+        
+        .preview-order-info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .preview-order-items-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .preview-order-items-title::before {
+            content: "📦";
+            margin-right: 0.5rem;
+        }
+        
+        .preview-order-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding: 1.2rem;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .preview-order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .preview-order-item-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .preview-item-status {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .preview-item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .preview-item-fields-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .preview-item-field {
+            flex: 1;
+        }
+        
+        .preview-field-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        
+        .preview-info-field {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .modal-footer button {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
         }
         
         .mode-indicator {
@@ -309,13 +492,93 @@
         </div>
     </div>
     
+    <!-- 预览按钮 -->
+    <div class="preview-button" onclick="openPreview()" title="预览订单">
+        <span class="preview-icon">👁️</span>
+        <span class="preview-text">预览</span>
+    </div>
+    
+    <style>
+        /* 预览按钮样式 */
+        .preview-button {
+            position: fixed;
+            bottom: 90px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            z-index: 1500;
+            transition: all 0.3s ease;
+        }
+        
+        .preview-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+        }
+        
+        .preview-icon {
+            font-size: 1.2rem;
+        }
+        
+        .preview-text {
+            font-weight: 500;
+        }
+    </style>
+    
+    <!-- 预览模态框 -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">订单预览</h2>
+                <button class="close-button" onclick="closePreview()">&times;</button>
+            </div>
+            <div class="preview-order-header">
+                <div class="preview-order-info">
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">客户名称</div>
+                        <div class="preview-order-info-value" id="preview-customer"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">手机号</div>
+                        <div class="preview-order-info-value" id="preview-phone"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">最终收款</div>
+                        <div class="preview-order-info-value" id="preview-paid-amount"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">订单备注</div>
+                        <div class="preview-order-info-value" id="preview-note"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-order-items-section">
+                <h3 class="preview-order-items-title">订单项目</h3>
+                <div class="preview-order-items" id="preview-order-items">
+                    <!-- 预览项目将通过JavaScript动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closePreview()">关闭预览</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // API基础URL配置 - 可手动切换
         // 本地开发使用: 'http://localhost:5000'
         // 服务器使用: 'http://101.42.35.88:5000'
         const API_BASE_URL = 'http://101.42.35.88:5000';
         
-        let allItems = [];
+        let allProjects = [];
         let orderItems = [];
         let itemIndex = 0;
         
@@ -327,11 +590,11 @@
         
         // 加载所有项目列表
         function loadAllItems() {
-            fetch(`${API_BASE_URL}/api/items`)
+            fetch(`${API_BASE_URL}/api/projects`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        allItems = data.data;
+                        allProjects = data.data;
                     }
                 });
         }
@@ -621,27 +884,122 @@
             const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
             const orderItem = orderItems.find(item => item.index === index);
             
+            // 移除现有的材质选择下拉框
+            const existingMaterialSelect = itemDiv.querySelector('.material-select');
+            if (existingMaterialSelect) {
+                existingMaterialSelect.remove();
+            }
+            
             if (value) {
-                const selectedOption = select.options[select.selectedIndex];
-                const itemId = parseInt(value);
-                const selectedItem = allItems.find(item => item.id === itemId);
+                const projectId = parseInt(value);
+                const selectedProject = allProjects.find(project => project.id === projectId);
                 
-                if (selectedItem) {
+                if (selectedProject) {
+                    orderItem.name = selectedProject.name;
+                    
+                    // 填充项目名称
+                    itemDiv.querySelector('.item-name').value = selectedProject.name;
+                    
+                    // 如果有材质，显示材质选择下拉框
+                    if (selectedProject.materials && selectedProject.materials.length > 0) {
+                        // 创建材质选择下拉框
+                        const materialSelect = document.createElement('select');
+                        materialSelect.className = 'material-select';
+                        materialSelect.style.marginTop = '0.5rem';
+                        materialSelect.style.width = '100%';
+                        materialSelect.style.padding = '0.5rem';
+                        materialSelect.style.border = '1px solid #ddd';
+                        materialSelect.style.borderRadius = '4px';
+                        
+                        // 添加材质选项
+                        selectedProject.materials.forEach((material, idx) => {
+                            const option = document.createElement('option');
+                            option.value = material.id;
+                            option.setAttribute('data-purchase-price', material.purchase_price);
+                            option.setAttribute('data-selling-price', material.selling_price);
+                            option.setAttribute('data-note', material.note || '');
+                            option.textContent = material.material;
+                            materialSelect.appendChild(option);
+                        });
+                        
+                        // 添加到页面
+                        const itemFields = itemDiv.querySelector(`#item-fields-${index}`);
+                        const materialField = itemFields.querySelector('.item-fields-row:first-child');
+                        materialField.appendChild(materialSelect);
+                        
+                        // 处理材质选择
+                        materialSelect.addEventListener('change', function() {
+                            handleMaterialSelect(this, index, selectedProject);
+                        });
+                        
+                        // 默认选择第一个材质
+                        if (materialSelect.options.length > 0) {
+                            materialSelect.selectedIndex = 0;
+                            handleMaterialSelect(materialSelect, index, selectedProject);
+                        }
+                    } else {
+                        // 没有材质时的处理
+                        orderItem.item_id = null;
+                        orderItem.material = '';
+                        orderItem.purchase_price = 0;
+                        orderItem.selling_price = 0;
+                        orderItem.note = '';
+                        orderItem.price = 0;
+                        
+                        // 填充字段
+                        itemDiv.querySelector('.item-material').value = '';
+                        itemDiv.querySelector('.item-purchase-price').value = '';
+                        itemDiv.querySelector('.item-selling-price').value = '';
+                        itemDiv.querySelector('.item-note').value = '';
+                    }
+                }
+            } else {
+                orderItem.isSystemItem = false;
+                orderItem.item_id = null;
+                orderItem.name = '';
+                orderItem.material = '';
+                orderItem.purchase_price = 0;
+                orderItem.selling_price = 0;
+                orderItem.note = '';
+                orderItem.price = 0;
+                
+                // 清空字段
+                itemDiv.querySelector('.item-name').value = '';
+                itemDiv.querySelector('.item-material').value = '';
+                itemDiv.querySelector('.item-purchase-price').value = '';
+                itemDiv.querySelector('.item-selling-price').value = '';
+                itemDiv.querySelector('.item-note').value = '';
+                
+                enableAllFields(index);
+            }
+            
+            updateTotalAmount();
+        }
+        
+        // 处理材质选择
+        function handleMaterialSelect(select, index, project) {
+            const value = select.value;
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            if (value) {
+                const materialId = parseInt(value);
+                const selectedMaterial = project.materials.find(material => material.id === materialId);
+                
+                if (selectedMaterial) {
                     orderItem.isSystemItem = true;
-                    orderItem.item_id = itemId;
-                    orderItem.name = selectedItem.name;
-                    orderItem.material = selectedItem.material || '';
-                    orderItem.purchase_price = parseFloat(selectedItem.purchase_price);
-                    orderItem.selling_price = parseFloat(selectedItem.selling_price);
-                    orderItem.note = selectedItem.note || '';
-                    orderItem.price = parseFloat(selectedItem.selling_price);
+                    orderItem.item_id = materialId;
+                    orderItem.material = selectedMaterial.material;
+                    orderItem.purchase_price = parseFloat(selectedMaterial.purchase_price);
+                    orderItem.selling_price = parseFloat(selectedMaterial.selling_price);
+                    orderItem.note = selectedMaterial.note || '';
+                    orderItem.price = parseFloat(selectedMaterial.selling_price);
                     
                     // 填充字段
-                    itemDiv.querySelector('.item-name').value = selectedItem.name;
-                    itemDiv.querySelector('.item-material').value = selectedItem.material || '';
-                    itemDiv.querySelector('.item-purchase-price').value = selectedItem.purchase_price;
-                    itemDiv.querySelector('.item-selling-price').value = selectedItem.selling_price;
-                    itemDiv.querySelector('.item-note').value = selectedItem.note || '';
+                    itemDiv.querySelector('.item-material').value = selectedMaterial.material;
+                    itemDiv.querySelector('.item-purchase-price').value = selectedMaterial.purchase_price;
+                    itemDiv.querySelector('.item-selling-price').value = selectedMaterial.selling_price;
+                    itemDiv.querySelector('.item-note').value = selectedMaterial.note || '';
                     
                     // 禁用不可编辑字段（材质、进价、备注）
                     itemDiv.querySelector('.item-material').disabled = true;
@@ -661,6 +1019,18 @@
             } else {
                 orderItem.isSystemItem = false;
                 orderItem.item_id = null;
+                orderItem.material = '';
+                orderItem.purchase_price = 0;
+                orderItem.selling_price = 0;
+                orderItem.note = '';
+                orderItem.price = 0;
+                
+                // 填充字段
+                itemDiv.querySelector('.item-material').value = '';
+                itemDiv.querySelector('.item-purchase-price').value = '';
+                itemDiv.querySelector('.item-selling-price').value = '';
+                itemDiv.querySelector('.item-note').value = '';
+                
                 enableAllFields(index);
             }
             
@@ -681,15 +1051,18 @@
             // 清空现有选项
             select.innerHTML = '';
             
+            // 添加默认选项
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择系统项目';
+            select.appendChild(defaultOption);
+            
             // 添加系统项目选项
-            allItems.forEach(item => {
+            allProjects.forEach(project => {
                 const option = document.createElement('option');
-                option.value = item.id;
-                option.setAttribute('data-price', item.selling_price);
-                option.setAttribute('data-purchase-price', item.purchase_price);
-                option.setAttribute('data-material', item.material || '');
-                option.setAttribute('data-note', item.note || '');
-                option.textContent = item.name;
+                option.value = project.id;
+                option.setAttribute('data-name', project.name);
+                option.textContent = project.name;
                 select.appendChild(option);
             });
         }
@@ -910,9 +1283,19 @@
             .then(data => {
                 if (data.success) {
                     showMessage('订单更新成功');
-                    setTimeout(() => {
-                        window.location.href = 'main.html?tab=orders';
-                    }, 1000);
+                    
+                    // 检查是否有重复项目
+                    if (data.duplicate_items && data.duplicate_items.length > 0) {
+                        // 自动跳转到项目管理页面并搜索重复项目
+                        const firstDuplicate = data.duplicate_items[0];
+                        setTimeout(() => {
+                            window.location.href = `main.html?tab=items&search=${encodeURIComponent(firstDuplicate.name)}`;
+                        }, 1000);
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = 'main.html?tab=orders';
+                        }, 1000);
+                    }
                 } else {
                     showMessage('更新失败: ' + data.message, false);
                 }
@@ -922,6 +1305,116 @@
                 console.error('Error:', error);
             });
         });
+        
+        // 打开预览模态框
+        function openPreview() {
+            // 获取订单基本信息
+            const customerName = document.getElementById('order-customer').value || '无';
+            const phone = document.getElementById('order-phone').value || '无';
+            const paidAmount = document.getElementById('order-paid-amount').value ? `¥${parseFloat(document.getElementById('order-paid-amount').value).toFixed(2)}` : '未结账';
+            const orderNote = document.getElementById('order-note').value || '无';
+            
+            // 填充预览信息
+            document.getElementById('preview-customer').textContent = customerName;
+            document.getElementById('preview-phone').textContent = phone;
+            document.getElementById('preview-paid-amount').textContent = paidAmount;
+            document.getElementById('preview-note').textContent = orderNote;
+            
+            // 收集并显示订单项目
+            const previewItemsDiv = document.getElementById('preview-order-items');
+            previewItemsDiv.innerHTML = '';
+            
+            let hasItems = false;
+            orderItems.forEach((orderItem, index) => {
+                if (orderItem.is_deleted) return;
+                
+                const itemDiv = document.querySelector(`.order-item[data-index="${orderItem.index}"]`);
+                if (!itemDiv) return;
+                
+                // 重新获取最新值
+                orderItem.name = itemDiv.querySelector('.item-name').value || '';
+                orderItem.material = itemDiv.querySelector('.item-material').value || '';
+                orderItem.purchase_price = parseFloat(itemDiv.querySelector('.item-purchase-price').value) || 0;
+                orderItem.selling_price = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
+                orderItem.note = itemDiv.querySelector('.item-note').value || '';
+                orderItem.quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
+                orderItem.price = orderItem.selling_price;
+                
+                if (!orderItem.name) return;
+                
+                hasItems = true;
+                
+                const previewItemDiv = document.createElement('div');
+                previewItemDiv.className = 'preview-order-item';
+                
+                previewItemDiv.innerHTML = `
+                    <div class="preview-order-item-header">
+                        <span class="preview-order-item-title">项目 ${index + 1}</span>
+                        <span class="preview-item-status">已添加</span>
+                    </div>
+                    <div class="preview-item-fields">
+                        <div class="preview-item-fields-row">
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">项目名称</div>
+                                <div class="preview-info-field">${orderItem.name || '无'}</div>
+                            </div>
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">数量</div>
+                                <div class="preview-info-field">${orderItem.quantity || 0}</div>
+                            </div>
+                        </div>
+                        <div class="preview-item-fields-row">
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">材质</div>
+                                <div class="preview-info-field">${orderItem.material || '无'}</div>
+                            </div>
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">进价</div>
+                                <div class="preview-info-field">¥${orderItem.purchase_price ? orderItem.purchase_price.toFixed(2) : '0.00'}</div>
+                            </div>
+                        </div>
+                        <div class="preview-item-fields-row">
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">销售价</div>
+                                <div class="preview-info-field">¥${orderItem.selling_price ? orderItem.selling_price.toFixed(2) : '0.00'}</div>
+                            </div>
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">小计</div>
+                                <div class="preview-info-field">¥${orderItem.quantity && orderItem.selling_price ? (orderItem.quantity * orderItem.selling_price).toFixed(2) : '0.00'}</div>
+                            </div>
+                        </div>
+                        <div class="preview-item-fields-row">
+                            <div class="preview-item-field">
+                                <div class="preview-field-label">备注</div>
+                                <div class="preview-info-field">${orderItem.note || '无'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                previewItemsDiv.appendChild(previewItemDiv);
+            });
+            
+            if (!hasItems) {
+                previewItemsDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">暂无项目</div>';
+            }
+            
+            // 显示模态框
+            document.getElementById('preview-modal').style.display = 'block';
+        }
+        
+        // 关闭预览模态框
+        function closePreview() {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('preview-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
         
         // 页面加载时加载数据
         window.onload = function() {

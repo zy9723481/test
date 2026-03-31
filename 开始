@@ -1,4 +1,45 @@
 git config --global core.autocrlf false
 git add .
-git commit -m "分支合并4"
+git commit -m "分支合并8"
 git push origin main
+
+
+服务器部署
+# 杀死所有旧服务
+pkill -f "python3 app.py" 2>/dev/null
+pkill -f "http.server" 2>/dev/null
+sleep 2
+
+# 进入正确目录
+cd /root/.jenkins/workspace@2/backend
+
+# 启动后端（永久运行）
+nohup python3 app.py > /dev/null 2>&1 &
+disown
+sleep 3
+
+# 启动前端
+cd ../frontend
+nohup python3 -m http.server 8000 > /dev/null 2>&1 &
+disown
+sleep 2
+
+# 查看结果
+echo "====================================="
+netstat -tulnp | grep -E "5000|8000"
+echo "====================================="
+
+
+本地部署
+cd backend
+python app.py
+
+cd frontend
+python -m http.server 8000
+
+
+# 修改所有前端HTML文件中的API_BASE_URL
+$files = @("frontend/main.html", "frontend/add-order.html", "frontend/edit-order.html", "frontend/add-project.html", "frontend/edit-project.html", "frontend/add-material.html", "frontend/edit-material.html")
+foreach ($file in $files) {
+    (Get-Content $file) -replace "const API_BASE_URL = 'http://101.42.35.88:5000';", "const API_BASE_URL = 'http://localhost:5000';" | Set-Content $file
+}

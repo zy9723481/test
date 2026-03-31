@@ -13,7 +13,33 @@ def init_database():
             )
             ''')
             
-            # 创建项目表
+            # 创建项目表（只存储项目名称）
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS projects (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                is_deleted TINYINT(1) DEFAULT 0
+            )
+            ''')
+            
+            # 创建材质表（存储材质信息和与项目的关联）
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS materials (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                project_id INT NOT NULL,
+                material VARCHAR(50) NOT NULL,
+                purchase_price DECIMAL(10,2) NOT NULL,
+                selling_price DECIMAL(10,2) NOT NULL,
+                stock INT NOT NULL DEFAULT 0,
+                note TEXT,
+                is_deleted TINYINT(1) DEFAULT 0,
+                source VARCHAR(50) DEFAULT 'normal',
+                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+                UNIQUE KEY unique_project_material (project_id, material)
+            )
+            ''')
+            
+            # 兼容旧表（用于数据迁移）
             cursor.execute('''
             CREATE TABLE IF NOT EXISTS items (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -27,24 +53,6 @@ def init_database():
                 source VARCHAR(50) DEFAULT 'normal'
             )
             ''')
-            
-            # 尝试添加is_deleted字段（如果不存在）
-            try:
-                cursor.execute('''
-                ALTER TABLE items ADD COLUMN is_deleted TINYINT(1) DEFAULT 0
-                ''')
-            except:
-                # 字段已存在，忽略错误
-                pass
-            
-            # 尝试添加source字段（如果不存在）
-            try:
-                cursor.execute('''
-                ALTER TABLE items ADD COLUMN source VARCHAR(50) DEFAULT 'normal'
-                ''')
-            except:
-                # 字段已存在，忽略错误
-                pass
             
             # 创建订单表
             cursor.execute('''

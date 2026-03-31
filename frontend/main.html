@@ -130,6 +130,313 @@
             margin-top: 1rem;
         }
         
+        /* 预览模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-button:hover {
+            color: #333;
+        }
+        
+        .preview-order-header {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .preview-order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .preview-order-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-order-info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+        }
+        
+        .preview-order-info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .preview-order-items-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .preview-order-items-title::before {
+            content: "📦";
+            margin-right: 0.5rem;
+        }
+        
+        .preview-order-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding: 1.2rem;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .preview-order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .preview-order-item-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .preview-item-status {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .preview-item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        
+        .preview-item-fields-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .preview-item-field {
+            flex: 1;
+        }
+        
+        .preview-field-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        
+        .preview-info-field {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .modal-footer button {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        /* AI助手样式 */
+        .ai-assistant-button {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.2rem;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            z-index: 1500;
+            transition: all 0.3s ease;
+        }
+        
+        .ai-assistant-button:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+        }
+        
+        .ai-icon {
+            font-size: 1.2rem;
+        }
+        
+        .ai-text {
+            font-weight: 500;
+        }
+        
+        .ai-chat-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .ai-chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .ai-chat-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .ai-close-button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .ai-chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .ai-message {
+            max-width: 80%;
+            padding: 0.8rem 1rem;
+            border-radius: 18px;
+            line-height: 1.4;
+        }
+        
+        .ai-message.user {
+            align-self: flex-end;
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-message.assistant {
+            align-self: flex-start;
+            background-color: #f5f5f5;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .ai-chat-input-container {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            gap: 0.5rem;
+        }
+        
+        .ai-chat-input-container input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .ai-chat-input-container button {
+            padding: 0.8rem 1.2rem;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .ai-chat-input-container button:hover {
+            background-color: #1976D2;
+        }
+        
         /* 搜索框样式 */
         .search-container {
             display: flex;
@@ -273,7 +580,7 @@
                     
                     <!-- 新增项目按钮 -->
                     <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                        <button onclick="window.location.href='add-item.html'" style="flex: 1;">新增项目</button>
+                        <button onclick="window.location.href='add-project.html'" style="flex: 1;">新增项目</button>
                     </div>
                 </div>
                 
@@ -319,6 +626,66 @@
     
     <div class="footer">
         <p>&copy; 2026 水暖管件管理系统</p>
+    </div>
+    
+    <!-- AI助手按钮 -->
+    <div class="ai-assistant-button" onclick="toggleAIChat()">
+        <span class="ai-icon">🤖</span>
+        <span class="ai-text">AI助手</span>
+    </div>
+    
+    <!-- AI聊天界面 -->
+    <div class="ai-chat-container" id="ai-chat-container">
+        <div class="ai-chat-header">
+            <h3>AI助手</h3>
+            <button class="ai-close-button" onclick="closeAIChat()">&times;</button>
+        </div>
+        <div class="ai-chat-messages" id="ai-chat-messages">
+            <!-- 聊天消息将通过JavaScript动态添加 -->
+        </div>
+        <div class="ai-chat-input-container">
+            <input type="text" id="ai-chat-input" placeholder="输入您的问题...">
+            <button onclick="sendAIMessage()">发送</button>
+        </div>
+    </div>
+    
+    <!-- 预览模态框 -->
+    <div id="preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">订单预览</h2>
+                <button class="close-button" onclick="closePreview()">&times;</button>
+            </div>
+            <div class="preview-order-header">
+                <div class="preview-order-info">
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">客户名称</div>
+                        <div class="preview-order-info-value" id="preview-customer"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">手机号</div>
+                        <div class="preview-order-info-value" id="preview-phone"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">最终收款</div>
+                        <div class="preview-order-info-value" id="preview-paid-amount"></div>
+                    </div>
+                    <div class="preview-order-info-item">
+                        <div class="preview-order-info-label">订单备注</div>
+                        <div class="preview-order-info-value" id="preview-note"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-order-items-section">
+                <h3 class="preview-order-items-title">订单项目</h3>
+                <div class="preview-order-items" id="preview-order-items">
+                    <!-- 预览项目将通过JavaScript动态加载 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closePreview()">关闭预览</button>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -389,63 +756,31 @@
                 });
         }
         
-        // 页面加载时根据URL参数切换页签和执行搜索
-        window.onload = function() {
-            switchTabByUrl();
+        // 显示消息提示
+        function showMessage(message, isSuccess = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isSuccess ? 'success' : 'error');
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '1rem 2rem';
+            messageDiv.style.borderRadius = '4px';
+            messageDiv.style.color = 'white';
+            messageDiv.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+            messageDiv.style.transition = 'all 0.3s ease';
             
-            // 检查URL中是否有搜索参数
-            const urlParams = new URLSearchParams(window.location.search);
-            const search = urlParams.get('search');
-            if (search) {
-                const tab = urlParams.get('tab');
-                if (tab === 'items') {
-                    // 执行项目搜索
-                    document.getElementById('item-search').value = search;
-                    loadItems(search);
-                } else if (tab === 'orders') {
-                    // 执行订单搜索
-                    document.getElementById('order-search').value = search;
-                    loadOrders(search);
-                }
-            }
+            document.body.appendChild(messageDiv);
             
-            // 更新页签数量
-            updateTabCounts();
-        };
-        
-        // 加载项目列表
-        function loadItems(searchTerm = '') {
-            fetch(`${API_BASE_URL}/api/items${searchTerm ? `?name=${searchTerm}` : ''}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const itemList = document.getElementById('item-list');
-                        itemList.innerHTML = '';
-                        
-                        if (data.data.length === 0) {
-                            itemList.innerHTML = '<p class="no-results">没有找到匹配的项目</p>';
-                            return;
-                        }
-                        
-                        data.data.forEach(item => {
-                            const itemCard = document.createElement('div');
-                            itemCard.className = 'item-card';
-                            itemCard.innerHTML = `
-                                <h3>${item.name}</h3>
-                                <p>进价: ¥${item.purchase_price}</p>
-                                <p>销售价: ¥${item.selling_price}</p>
-                                <p>库存: ${item.stock}</p>
-                                <p>材质: ${(item.material && item.material !== 'null') ? item.material : '无'}</p>
-                                <p>备注: ${item.note || '无'}</p>
-                                <div class="card-actions">
-                                    <button onclick="editItem(${item.id})" style="background-color: #2196F3; color: white;">编辑</button>
-                                    <button onclick="deleteItem(${item.id})" style="background-color: #f44336; color: white;">删除</button>
-                                </div>
-                            `;
-                            itemList.appendChild(itemCard);
-                        });
-                    }
-                });
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
         }
         
         // 编辑项目
@@ -558,29 +893,7 @@
             .then(data => {
                 if (data.success) {
                     // 显示删除成功提示
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = '项目删除成功';
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.padding = '1rem 2rem';
-                    messageDiv.style.borderRadius = '4px';
-                    messageDiv.style.color = 'white';
-                    messageDiv.style.backgroundColor = '#f44336';
-                    messageDiv.style.zIndex = '1000';
-                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                    messageDiv.style.transition = 'all 0.3s ease';
-                    
-                    document.body.appendChild(messageDiv);
-                    
-                    setTimeout(() => {
-                        messageDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            document.body.removeChild(messageDiv);
-                        }, 300);
-                    }, 3000);
+                    showMessage('项目删除成功', true);
                     
                     // 重新加载项目列表
                     loadItems();
@@ -588,57 +901,12 @@
                     updateTabCounts();
                 } else {
                     // 显示错误提示
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = '删除失败: ' + data.message;
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.padding = '1rem 2rem';
-                    messageDiv.style.borderRadius = '4px';
-                    messageDiv.style.color = 'white';
-                    messageDiv.style.backgroundColor = '#f44336';
-                    messageDiv.style.zIndex = '1000';
-                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                    messageDiv.style.transition = 'all 0.3s ease';
-                    
-                    document.body.appendChild(messageDiv);
-                    
-                    setTimeout(() => {
-                        messageDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            document.body.removeChild(messageDiv);
-                        }, 300);
-                    }, 3000);
+                    showMessage('删除失败: ' + data.message, false);
                 }
             })
             .catch(error => {
                 // 显示网络错误提示
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message error';
-                messageDiv.textContent = '网络错误，请重试';
-                messageDiv.style.position = 'fixed';
-                messageDiv.style.top = '20px';
-                messageDiv.style.left = '50%';
-                messageDiv.style.transform = 'translateX(-50%)';
-                messageDiv.style.padding = '1rem 2rem';
-                messageDiv.style.borderRadius = '4px';
-                messageDiv.style.color = 'white';
-                messageDiv.style.backgroundColor = '#f44336';
-                messageDiv.style.zIndex = '1000';
-                messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                messageDiv.style.transition = 'all 0.3s ease';
-                
-                document.body.appendChild(messageDiv);
-                
-                setTimeout(() => {
-                    messageDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        document.body.removeChild(messageDiv);
-                    }, 300);
-                }, 3000);
-                
+                showMessage('网络错误，请重试', false);
                 console.error('Error:', error);
             });
         }
@@ -647,20 +915,6 @@
         function deleteItem(itemId) {
             createDeleteModal(itemId);
         }
-        
-        // 项目查询
-        document.getElementById('search-button').addEventListener('click', function() {
-            const searchTerm = document.getElementById('item-search').value;
-            loadItems(searchTerm);
-        });
-        
-        // 回车键搜索
-        document.getElementById('item-search').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const searchTerm = this.value;
-                loadItems(searchTerm);
-            }
-        });
         
         // 加载订单列表
         function loadOrders(searchTerm = '', startDate = '', endDate = '') {
@@ -718,8 +972,8 @@
                                 <p>总项目数: ${order.item_count}</p>
                                 <p>结账状态: ${isPaidStatus}</p>
                                 <div class="card-actions">
-                                    <button onclick="editOrder(${order.id})">编辑</button>
-                                    <button onclick="viewOrder(${order.id})">查看详情</button>
+                                    <button onclick="editOrder(${order.id})")">编辑</button>
+                                    <button onclick="viewOrder(${order.id})")">查看详情</button>
                                 </div>
                             `;
                             orderList.appendChild(orderCard);
@@ -733,10 +987,109 @@
             window.location.href = 'edit-order.html?id=' + orderId;
         }
         
-        // 查看订单详情
+        // 查看订单详情（预览功能）
         function viewOrder(orderId) {
-            window.location.href = 'view-order.html?id=' + orderId;
+            openOrderPreview(orderId);
         }
+        
+        // 打开订单预览
+        function openOrderPreview(orderId) {
+            fetch(`${API_BASE_URL}/api/orders/${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const order = data.data;
+                        
+                        // 填充预览信息
+                        document.getElementById('preview-customer').textContent = order.customer_name || '无';
+                        document.getElementById('preview-phone').textContent = order.phone || '无';
+                        document.getElementById('preview-paid-amount').textContent = order.paid_amount ? `¥${parseFloat(order.paid_amount).toFixed(2)}` : '未结账';
+                        document.getElementById('preview-note').textContent = order.note || '无';
+                        
+                        // 收集并显示订单项目
+                        const previewItemsDiv = document.getElementById('preview-order-items');
+                        previewItemsDiv.innerHTML = '';
+                        
+                        if (order.items && Array.isArray(order.items)) {
+                            order.items.forEach((item, index) => {
+                                const previewItemDiv = document.createElement('div');
+                                previewItemDiv.className = 'preview-order-item';
+                                
+                                previewItemDiv.innerHTML = `
+                                    <div class="preview-order-item-header">
+                                        <span class="preview-order-item-title">项目 ${index + 1}</span>
+                                        <span class="preview-item-status">已添加</span>
+                                    </div>
+                                    <div class="preview-item-fields">
+                                        <div class="preview-item-fields-row">
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">项目名称</div>
+                                                <div class="preview-info-field">${item.name || '无'}</div>
+                                            </div>
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">数量</div>
+                                                <div class="preview-info-field">${item.quantity || 0}</div>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-fields-row">
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">材质</div>
+                                                <div class="preview-info-field">${item.material || '无'}</div>
+                                            </div>
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">进价</div>
+                                                <div class="preview-info-field">¥${item.purchase_price ? parseFloat(item.purchase_price).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-fields-row">
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">销售价</div>
+                                                <div class="preview-info-field">¥${item.selling_price ? parseFloat(item.selling_price).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">小计</div>
+                                                <div class="preview-info-field">¥${item.quantity && item.selling_price ? (parseFloat(item.quantity) * parseFloat(item.selling_price)).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                        </div>
+                                        <div class="preview-item-fields-row">
+                                            <div class="preview-item-field">
+                                                <div class="preview-field-label">备注</div>
+                                                <div class="preview-info-field">${item.note || '无'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                
+                                previewItemsDiv.appendChild(previewItemDiv);
+                            });
+                        } else {
+                            previewItemsDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">暂无项目</div>';
+                        }
+                        
+                        // 显示模态框
+                        document.getElementById('preview-modal').style.display = 'block';
+                    } else {
+                        showMessage('加载订单失败: ' + data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误，请重试', false);
+                    console.error('Error:', error);
+                });
+        }
+        
+        // 关闭预览模态框
+        function closePreview() {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('preview-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
         
         // 删除订单
         function deleteOrder(orderId) {
@@ -843,29 +1196,7 @@
             .then(data => {
                 if (data.success) {
                     // 显示删除成功提示
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = '订单删除成功';
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.padding = '1rem 2rem';
-                    messageDiv.style.borderRadius = '4px';
-                    messageDiv.style.color = 'white';
-                    messageDiv.style.backgroundColor = '#f44336';
-                    messageDiv.style.zIndex = '1000';
-                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                    messageDiv.style.transition = 'all 0.3s ease';
-                    
-                    document.body.appendChild(messageDiv);
-                    
-                    setTimeout(() => {
-                        messageDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            document.body.removeChild(messageDiv);
-                        }, 300);
-                    }, 3000);
+                    showMessage('订单删除成功', true);
                     
                     // 重新加载订单列表
                     loadOrders();
@@ -873,62 +1204,17 @@
                     updateTabCounts();
                 } else {
                     // 显示错误提示
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = '删除失败: ' + data.message;
-                    messageDiv.style.position = 'fixed';
-                    messageDiv.style.top = '20px';
-                    messageDiv.style.left = '50%';
-                    messageDiv.style.transform = 'translateX(-50%)';
-                    messageDiv.style.padding = '1rem 2rem';
-                    messageDiv.style.borderRadius = '4px';
-                    messageDiv.style.color = 'white';
-                    messageDiv.style.backgroundColor = '#f44336';
-                    messageDiv.style.zIndex = '1000';
-                    messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                    messageDiv.style.transition = 'all 0.3s ease';
-                    
-                    document.body.appendChild(messageDiv);
-                    
-                    setTimeout(() => {
-                        messageDiv.style.opacity = '0';
-                        setTimeout(() => {
-                            document.body.removeChild(messageDiv);
-                        }, 300);
-                    }, 3000);
+                    showMessage('删除失败: ' + data.message, false);
                 }
             })
             .catch(error => {
                 // 显示网络错误提示
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message error';
-                messageDiv.textContent = '网络错误，请重试';
-                messageDiv.style.position = 'fixed';
-                messageDiv.style.top = '20px';
-                messageDiv.style.left = '50%';
-                messageDiv.style.transform = 'translateX(-50%)';
-                messageDiv.style.padding = '1rem 2rem';
-                messageDiv.style.borderRadius = '4px';
-                messageDiv.style.color = 'white';
-                messageDiv.style.backgroundColor = '#f44336';
-                messageDiv.style.zIndex = '1000';
-                messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-                messageDiv.style.transition = 'all 0.3s ease';
-                
-                document.body.appendChild(messageDiv);
-                
-                setTimeout(() => {
-                    messageDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        document.body.removeChild(messageDiv);
-                    }, 300);
-                }, 3000);
-                
+                showMessage('网络错误，请重试', false);
                 console.error('Error:', error);
             });
         }
         
-        // 订单查询
+        // 订单搜索
         document.getElementById('order-search-button').addEventListener('click', function() {
             const searchTerm = document.getElementById('order-search').value;
             const startDate = document.getElementById('order-start-date').value;
@@ -936,73 +1222,347 @@
             loadOrders(searchTerm, startDate, endDate);
         });
         
-        // 回车键搜索订单
-        document.getElementById('order-search').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const searchTerm = this.value;
-                const startDate = document.getElementById('order-start-date').value;
-                const endDate = document.getElementById('order-end-date').value;
-                loadOrders(searchTerm, startDate, endDate);
-            }
-        });
+        // AI助手功能
+        const DEEPSEEK_API_KEY = "sk-6c9c8be9abfb4db58381c35abf602e8d";
+        const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+        const DEEPSEEK_MODEL = "deepseek-chat";
         
-        // 添加订单项目
-        document.getElementById('order-items').addEventListener('click', function(e) {
-            if (e.target.classList.contains('add-item-button')) {
-                const orderItems = document.getElementById('order-items');
-                const newItem = document.createElement('div');
-                newItem.className = 'order-item';
-                newItem.innerHTML = `
-                    <input type="text" placeholder="项目名称" class="item-name-input">
-                    <input type="number" placeholder="数量" class="item-quantity-input" min="1">
-                    <button type="button" class="remove-item-button">删除</button>
-                `;
-                orderItems.appendChild(newItem);
-            } else if (e.target.classList.contains('remove-item-button')) {
-                e.target.parentElement.remove();
-                updateTotalAmount();
+        // 切换AI聊天界面
+        function toggleAIChat() {
+            const chatContainer = document.getElementById('ai-chat-container');
+            chatContainer.style.display = chatContainer.style.display === 'flex' ? 'none' : 'flex';
+            
+            if (chatContainer.style.display === 'flex') {
+                // 加载聊天历史
+                loadChatHistory();
             }
-        });
-        
-        // 更新总金额
-        function updateTotalAmount() {
-            let total = 0;
-            // 这里需要根据实际项目价格计算总金额
-            document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
         }
         
-        // 新增订单表单提交
-        document.getElementById('add-order-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // 关闭AI聊天界面
+        function closeAIChat() {
+            document.getElementById('ai-chat-container').style.display = 'none';
+        }
+        
+        // 发送AI消息
+        function sendAIMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const message = input.value.trim();
             
-            const customerName = document.getElementById('order-customer').value;
-            const orderItems = [];
+            if (!message) return;
             
-            // 这里需要收集订单项目信息
+            // 添加用户消息
+            addMessage('user', message);
+            input.value = '';
             
-            const orderData = {
-                customer_name: customerName,
-                items: orderItems
-            };
+            // 保存到历史记录
+            saveMessage('user', message);
             
-            fetch(`${API_BASE_URL}/api/orders`, {
+            // 显示正在输入状态
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typing-indicator';
+            typingIndicator.className = 'ai-message assistant';
+            typingIndicator.textContent = 'AI正在输入...';
+            document.getElementById('ai-chat-messages').appendChild(typingIndicator);
+            
+            // 滚动到底部
+            scrollToBottom();
+            
+            // 调用DeepSeek API
+            fetch(`${DEEPSEEK_BASE_URL}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
                 },
-                body: JSON.stringify(orderData)
+                body: JSON.stringify({
+                    model: DEEPSEEK_MODEL,
+                    messages: [
+                        {
+                            role: "system",
+                            content: "你是一个水暖管件管理系统的AI助手，帮助用户解答关于系统操作、管件知识等问题。"
+                        },
+                        {
+                            role: "user",
+                            content: message
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                })
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    alert('订单创建成功');
-                    this.reset();
-                    loadOrders();
+                // 移除正在输入状态
+                document.getElementById('typing-indicator').remove();
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    const aiResponse = data.choices[0].message.content;
+                    // 添加AI回复
+                    addMessage('assistant', aiResponse);
+                    // 保存到历史记录
+                    saveMessage('assistant', aiResponse);
                 } else {
-                    alert('创建失败: ' + data.message);
+                    // 添加错误消息
+                    addMessage('assistant', '抱歉，AI服务暂时不可用，请稍后重试。');
                 }
+                
+                // 滚动到底部
+                scrollToBottom();
+            })
+            .catch(error => {
+                // 移除正在输入状态
+                document.getElementById('typing-indicator').remove();
+                
+                // 添加错误消息
+                addMessage('assistant', '抱歉，AI服务暂时不可用，请稍后重试。');
+                console.error('AI API Error:', error);
+                
+                // 滚动到底部
+                scrollToBottom();
             });
+        }
+        
+        // 添加消息到聊天界面
+        function addMessage(role, content) {
+            const messagesContainer = document.getElementById('ai-chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${role}`;
+            messageDiv.textContent = content;
+            messagesContainer.appendChild(messageDiv);
+        }
+        
+        // 保存消息到历史记录
+        function saveMessage(role, content) {
+            // 获取当前用户标识（这里使用固定值，实际应该从登录信息获取）
+            const userId = 'current_user';
+            const storageKey = `ai_chat_history_${userId}`;
+            
+            // 获取现有历史记录
+            let history = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            // 添加新消息
+            history.push({
+                role,
+                content,
+                timestamp: new Date().toISOString()
+            });
+            
+            // 限制历史记录数量
+            if (history.length > 50) {
+                history = history.slice(-50);
+            }
+            
+            // 保存到localStorage
+            localStorage.setItem(storageKey, JSON.stringify(history));
+        }
+        
+        // 加载聊天历史
+        function loadChatHistory() {
+            // 获取当前用户标识（这里使用固定值，实际应该从登录信息获取）
+            const userId = 'current_user';
+            const storageKey = `ai_chat_history_${userId}`;
+            
+            // 获取历史记录
+            const history = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            
+            // 清空当前消息
+            document.getElementById('ai-chat-messages').innerHTML = '';
+            
+            // 添加历史消息
+            history.forEach(message => {
+                addMessage(message.role, message.content);
+            });
+            
+            // 滚动到底部
+            scrollToBottom();
+        }
+        
+        // 滚动到聊天底部
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('ai-chat-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // 回车键发送消息
+        document.getElementById('ai-chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendAIMessage();
+            }
         });
+        
+        // 搜索功能 - 只搜索项目名称
+        document.getElementById('search-button').addEventListener('click', function() {
+            const searchTerm = document.getElementById('item-search').value;
+            loadItems(searchTerm);
+        });
+        
+        // 回车键搜索
+        document.getElementById('item-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value;
+                loadItems(searchTerm);
+            }
+        });
+        
+        // 加载项目列表（支持搜索）
+        function loadItems(searchTerm = '') {
+            let url = `${API_BASE_URL}/api/projects`;
+            if (searchTerm) {
+                url += `?name=${encodeURIComponent(searchTerm)}`;
+            }
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const itemList = document.getElementById('item-list');
+                        itemList.innerHTML = '';
+                        
+                        if (data.data.length === 0) {
+                            itemList.innerHTML = '<p class="no-results">没有找到匹配的项目</p>';
+                            return;
+                        }
+                        
+                        data.data.forEach(project => {
+                            createProjectCard(project);
+                        });
+                    }
+                });
+        }
+        
+        // 创建项目卡片
+        function createProjectCard(project) {
+            const itemList = document.getElementById('item-list');
+            const itemCard = document.createElement('div');
+            itemCard.className = 'item-card';
+            
+            // 构建材质列表
+            let materialsHtml = '';
+            if (project.materials && project.materials.length > 0) {
+                materialsHtml = '<div style="margin-top: 0.5rem; border-top: 1px solid #eee; padding-top: 0.5rem;">';
+                project.materials.forEach(material => {
+                    materialsHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <div>
+                                <strong>${material.material}</strong> - 销售价: ¥${parseFloat(material.selling_price).toFixed(2)}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button onclick="editMaterial(${material.id}, ${project.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">编辑</button>
+                                <button onclick="deleteMaterial(${material.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #f44336; color: white;">删除</button>
+                            </div>
+                        </div>
+                        <div style="margin-left: 1rem; font-size: 0.8rem; color: #666;">
+                            进价: ¥${parseFloat(material.purchase_price).toFixed(2)} | 库存: ${material.stock} | 备注: ${material.note || '无'}
+                        </div>
+                    `;
+                });
+                materialsHtml += '</div>';
+            } else {
+                materialsHtml = '<p style="color: #999; margin-top: 0.5rem;">暂无材质</p>';
+            }
+            
+            itemCard.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h3>${project.name}</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="addMaterial(${project.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">添加材质</button>
+                        <button onclick="editProject(${project.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #2196F3; color: white;">编辑项目</button>
+                        <button onclick="deleteProject(${project.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; background-color: #f44336; color: white;">删除项目</button>
+                    </div>
+                </div>
+                ${materialsHtml}
+            `;
+            itemList.appendChild(itemCard);
+        }
+        
+        // 编辑项目
+        function editProject(projectId) {
+            window.location.href = `edit-project.html?id=${projectId}`;
+        }
+        
+        // 添加材质
+        function addMaterial(projectId) {
+            window.location.href = `add-material.html?project_id=${projectId}`;
+        }
+        
+        // 编辑材质
+        function editMaterial(materialId, projectId) {
+            window.location.href = `edit-material.html?id=${materialId}&project_id=${projectId}`;
+        }
+        
+        // 删除材质
+        function deleteMaterial(materialId) {
+            if (confirm('确定要删除这个材质吗？')) {
+                fetch(`${API_BASE_URL}/api/materials/${materialId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('材质删除成功', true);
+                        loadItems();
+                    } else {
+                        showMessage('删除失败: ' + data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误，请重试', false);
+                    console.error('Error:', error);
+                });
+            }
+        }
+        
+        // 删除项目
+        function deleteProject(projectId) {
+            if (confirm('确定要删除这个项目吗？所有关联的材质也会被删除。')) {
+                fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('项目删除成功', true);
+                        loadItems();
+                        updateTabCounts();
+                    } else {
+                        showMessage('删除失败: ' + data.message, false);
+                    }
+                })
+                .catch(error => {
+                    showMessage('网络错误，请重试', false);
+                    console.error('Error:', error);
+                });
+            }
+        }
+        
+        // 初始化页面
+        window.onload = function() {
+            switchTabByUrl();
+            
+            // 检查URL中是否有搜索参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('search');
+            if (search) {
+                const tab = urlParams.get('tab');
+                if (tab === 'items') {
+                    // 执行项目搜索
+                    document.getElementById('item-search').value = search;
+                    loadItems(search);
+                } else if (tab === 'orders') {
+                    // 执行订单搜索
+                    document.getElementById('order-search').value = search;
+                    loadOrders(search);
+                }
+            }
+            
+            // 更新页签数量
+            updateTabCounts();
+        };
     </script>
 </body>
 </html>

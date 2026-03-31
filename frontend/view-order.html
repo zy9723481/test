@@ -35,8 +35,124 @@
         .form-container {
             background-color: white;
             border-radius: 8px;
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .order-header {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .order-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .order-info-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.2rem;
+        }
+        
+        .order-info-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .order-items-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .order-items-title::before {
+            content: "📦";
+            margin-right: 0.5rem;
+        }
+        
+        .order-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding: 1.2rem;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .order-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .order-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .order-item-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .item-status {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .item-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        .item-fields-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .item-field {
+            flex: 1;
+        }
+        
+        .field-label {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        
+        .info-field {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: white;
         }
         
         .header h1 {
@@ -167,31 +283,35 @@
     <div class="content">
         <div class="form-container">
             <input type="hidden" id="order-id" name="id">
-            <div class="form-group">
-                <label for="order-customer">客户名称</label>
-                <div class="info-field" id="order-customer"></div>
-            </div>
             
-            <div class="form-group">
-                <label for="order-phone">手机号</label>
-                <div class="info-field" id="order-phone"></div>
-            </div>
-            
-            <div class="form-group">
-                <label>订单项目</label>
-                <div class="order-items" id="order-items">
-                    <!-- 订单项目将通过JavaScript动态加载 -->
+            <!-- 订单头部信息 -->
+            <div class="order-header">
+                <div class="order-info">
+                    <div class="order-info-item">
+                        <div class="order-info-label">客户名称</div>
+                        <div class="order-info-value" id="order-customer"></div>
+                    </div>
+                    <div class="order-info-item">
+                        <div class="order-info-label">手机号</div>
+                        <div class="order-info-value" id="order-phone"></div>
+                    </div>
+                    <div class="order-info-item">
+                        <div class="order-info-label">最终收款</div>
+                        <div class="order-info-value" id="order-paid-amount"></div>
+                    </div>
+                    <div class="order-info-item">
+                        <div class="order-info-label">订单备注</div>
+                        <div class="order-info-value" id="order-note"></div>
+                    </div>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="order-note">订单备注</label>
-                <div class="info-field" id="order-note" style="min-height: 80px;"></div>
-            </div>
-            
-            <div class="form-group">
-                <label for="order-paid-amount">最终收款金额</label>
-                <div class="info-field" id="order-paid-amount"></div>
+            <!-- 订单项目 -->
+            <div class="order-items-section">
+                <h3 class="order-items-title">订单项目</h3>
+                <div class="order-items" id="order-items">
+                    <!-- 订单项目将通过JavaScript动态加载 -->
+                </div>
             </div>
         </div>
     </div>
@@ -208,10 +328,9 @@
     </div>
     
     <script>
-        // API基础URL配置 - 可手动切换
-        // 本地开发使用: 'http://localhost:5000'
-        // 服务器使用: 'http://101.42.35.88:5000'
-        const API_BASE_URL = 'http://101.42.35.88:5000';
+        // 动态API基础URL配置
+        const hostname = window.location.hostname;
+        const API_BASE_URL = hostname === 'localhost' || hostname === '127.0.0.1' ? 'http://localhost:5000' : 'http://101.42.35.88:5000';
         
         // 获取URL参数
         function getUrlParam(name) {
@@ -228,69 +347,80 @@
             }
             
             fetch(`${API_BASE_URL}/api/orders/${orderId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Response data:', data);
                     if (data.success) {
                         const order = data.data;
+                        console.log('Order data:', order);
                         document.getElementById('order-id').value = order.id;
                         document.getElementById('order-customer').textContent = order.customer_name || '无';
                         document.getElementById('order-phone').textContent = order.phone || '无';
                         document.getElementById('order-note').textContent = order.note || '无';
-                        document.getElementById('order-paid-amount').textContent = order.paid_amount ? `¥${order.paid_amount.toFixed(2)}` : '未结账';
-                        document.getElementById('total-amount').textContent = `总合计：¥${order.total_amount.toFixed(2)}`;
+                        document.getElementById('order-paid-amount').textContent = order.paid_amount ? `¥${parseFloat(order.paid_amount).toFixed(2)}` : '未结账';
+                        document.getElementById('total-amount').textContent = `总合计：¥${parseFloat(order.total_amount).toFixed(2)}`;
                         
                         // 初始化订单项目
                         const orderItemsDiv = document.getElementById('order-items');
-                        order.items.forEach((item, index) => {
-                            const itemDiv = document.createElement('div');
-                            itemDiv.className = 'order-item';
-                            
-                            itemDiv.innerHTML = `
-                                <div class="order-item-header">
-                                    <span class="order-item-title">项目 ${index + 1}</span>
-                                </div>
-                                <div class="item-fields">
-                                    <div class="item-fields-row">
-                                        <div style="flex: 2;">
-                                            <div class="field-label">项目名称</div>
-                                            <div class="info-field">${item.name}</div>
+                        if (order.items && Array.isArray(order.items)) {
+                            orderItemsDiv.innerHTML = '';
+                            order.items.forEach((item, index) => {
+                                const itemDiv = document.createElement('div');
+                                itemDiv.className = 'order-item';
+                                
+                                itemDiv.innerHTML = `
+                                    <div class="order-item-header">
+                                        <span class="order-item-title">项目 ${index + 1}</span>
+                                        <span class="item-status">已添加</span>
+                                    </div>
+                                    <div class="item-fields">
+                                        <div class="item-fields-row">
+                                            <div class="item-field">
+                                                <div class="field-label">项目名称</div>
+                                                <div class="info-field">${item.name || '无'}</div>
+                                            </div>
+                                            <div class="item-field">
+                                                <div class="field-label">数量</div>
+                                                <div class="info-field">${item.quantity || 0}</div>
+                                            </div>
                                         </div>
-                                        <div style="flex: 1;">
-                                            <div class="field-label">数量</div>
-                                            <div class="info-field">${item.quantity}</div>
+                                        <div class="item-fields-row">
+                                            <div class="item-field">
+                                                <div class="field-label">材质</div>
+                                                <div class="info-field">${item.material || '无'}</div>
+                                            </div>
+                                            <div class="item-field">
+                                                <div class="field-label">进价</div>
+                                                <div class="info-field">¥${item.purchase_price ? parseFloat(item.purchase_price).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                        </div>
+                                        <div class="item-fields-row">
+                                            <div class="item-field">
+                                                <div class="field-label">销售价</div>
+                                                <div class="info-field">¥${item.selling_price ? parseFloat(item.selling_price).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                            <div class="item-field">
+                                                <div class="field-label">小计</div>
+                                                <div class="info-field">¥${item.quantity && item.selling_price ? (parseFloat(item.quantity) * parseFloat(item.selling_price)).toFixed(2) : '0.00'}</div>
+                                            </div>
+                                        </div>
+                                        <div class="item-fields-row">
+                                            <div class="item-field">
+                                                <div class="field-label">备注</div>
+                                                <div class="info-field">${item.note || '无'}</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="item-fields-row">
-                                        <div style="flex: 1;">
-                                            <div class="field-label">材质</div>
-                                            <div class="info-field">${item.material || '无'}</div>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <div class="field-label">进价</div>
-                                            <div class="info-field">¥${item.purchase_price.toFixed(2)}</div>
-                                        </div>
-                                    </div>
-                                    <div class="item-fields-row">
-                                        <div style="flex: 1;">
-                                            <div class="field-label">销售价</div>
-                                            <div class="info-field">¥${item.selling_price.toFixed(2)}</div>
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <div class="field-label">小计</div>
-                                            <div class="info-field">¥${(item.quantity * item.selling_price).toFixed(2)}</div>
-                                        </div>
-                                    </div>
-                                    <div class="item-fields-row">
-                                        <div style="flex: 1;">
-                                            <div class="field-label">备注</div>
-                                            <div class="info-field">${item.note || '无'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                            
-                            orderItemsDiv.appendChild(itemDiv);
-                        });
+                                `;
+                                
+                                orderItemsDiv.appendChild(itemDiv);
+                            });
+                        } else {
+                            orderItemsDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">暂无项目</div>';
+                        }
                     } else {
                         showMessage('加载订单失败: ' + data.message, false);
                     }
