@@ -552,6 +552,33 @@
             document.getElementById('total-amount').textContent = `总合计：¥${total.toFixed(2)}`;
         }
         
+        // 显示提示信息
+        function showMessage(message, isSuccess = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (isSuccess ? 'success' : 'error');
+            messageDiv.textContent = message;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '1rem 2rem';
+            messageDiv.style.borderRadius = '4px';
+            messageDiv.style.color = 'white';
+            messageDiv.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+            messageDiv.style.transition = 'all 0.3s ease';
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(messageDiv);
+                }, 300);
+            }, 3000);
+        }
+        
         // 表单提交
         document.getElementById('add-sales-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -561,7 +588,7 @@
             const note = document.getElementById('sales-note').value.trim();
             
             if (!name) {
-                alert('请输入名称');
+                showMessage('请输入名称', false);
                 document.getElementById('sales-name').focus();
                 return;
             }
@@ -574,13 +601,13 @@
                     const sellingPrice = parseFloat(itemDiv.querySelector('.item-selling-price').value) || 0;
                     
                     if (quantity <= 0) {
-                        alert('数量必须大于0');
+                        showMessage('数量必须大于0', false);
                         itemDiv.querySelector('.item-quantity').focus();
                         return;
                     }
                     
                     if (sellingPrice <= 0) {
-                        alert('销售价必须大于0');
+                        showMessage('销售价必须大于0', false);
                         itemDiv.querySelector('.item-selling-price').focus();
                         return;
                     }
@@ -589,7 +616,7 @@
                     if (!item.isSystemItem) {
                         itemName = itemDiv.querySelector('.item-name').value.trim();
                         if (!itemName) {
-                            alert('请输入项目名称');
+                            showMessage('请输入项目名称', false);
                             itemDiv.querySelector('.item-name').focus();
                             return;
                         }
@@ -608,7 +635,7 @@
             }
             
             if (items.length === 0) {
-                alert('请至少添加一个项目');
+                showMessage('请至少添加一个项目', false);
                 return;
             }
             
@@ -629,14 +656,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('销售记录创建成功');
+                    showMessage('销售记录创建成功');
                     window.location.href = 'main.html?tab=sales';
                 } else {
-                    alert('创建失败: ' + data.message);
+                    showMessage('创建失败: ' + data.message, false);
                 }
             })
             .catch(error => {
-                alert('网络错误，请重试');
+                showMessage('网络错误，请重试', false);
                 console.error('Error:', error);
             });
         });
