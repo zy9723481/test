@@ -1355,71 +1355,100 @@ def create_sales_record():
             sales_id = cursor.lastrowid
             
             # 处理每个项目
-            for item in items:
-                item_name = item.get('name', '').strip()
-                is_system_item = item.get('is_system_item', False)
-                item_id = item.get('item_id')
-                material = item.get('material', '')
-                purchase_price = item.get('purchase_price', 0)
-                selling_price = item.get('selling_price', 0)
-                quantity = item.get('quantity', 1)
-                item_note = item.get('note', '')
-                
-                # 如果不是系统项目，检查是否需要添加到项目管理
-                if not is_system_item and item_name:
-                    # 检查项目是否已存在
-                    cursor.execute('''
-                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                    ''', (item_name,))
-                    project = cursor.fetchone()
+                for item in items:
+                    item_name = item.get('name', '').strip()
+                    is_system_item = item.get('is_system_item', False)
+                    item_id = item.get('item_id')
+                    material = item.get('material', '')
+                    purchase_price = item.get('purchase_price', 0)
+                    selling_price = item.get('selling_price', 0)
+                    quantity = item.get('quantity', 1)
+                    item_note = item.get('note', '')
                     
-                    if not project:
-                        # 创建新项目
+                    if is_system_item and item_id:
+                        # 系统项目：更新价格和轨迹
                         cursor.execute('''
-                        INSERT INTO projects (name) VALUES (%s)
-                        ''', (item_name,))
-                        project_id = cursor.lastrowid
+                        SELECT m.id, m.purchase_price, m.selling_price, p.name as project_name
+                        FROM materials m
+                        JOIN projects p ON m.project_id = p.id
+                        WHERE m.id = %s AND m.is_deleted = 0 AND p.is_deleted = 0
+                        ''', (item_id,))
+                        material_info = cursor.fetchone()
                         
-                        # 创建材质
-                        cursor.execute('''
-                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
-                        VALUES (%s, %s, %s, %s, %s, %s, 'sales')
-                        ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
-                        
-                        # 记录价格轨迹
-                        cursor.execute('''
-                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
-                        VALUES (%s, %s, %s, %s, 'auto')
-                        ''', (item_name, material or '默认', purchase_price, selling_price))
-                    else:
-                        project_id = project['id']
-                        
-                        # 检查材质是否已存在
-                        cursor.execute('''
-                        SELECT id, purchase_price, selling_price FROM materials 
-                        WHERE project_id = %s AND material = %s AND is_deleted = 0
-                        ''', (project_id, material or '默认'))
-                        existing_material = cursor.fetchone()
-                        
-                        if existing_material:
-                            # 更新价格
-                            if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                        if material_info:
+                            material_id = material_info['id']
+                            current_purchase_price = material_info['purchase_price']
+                            current_selling_price = material_info['selling_price']
+                            project_name = material_info['project_name']
+                            
+                            # 检查价格是否发生变化
+                            if current_purchase_price != purchase_price or current_selling_price != selling_price:
+                                # 更新材质价格
                                 cursor.execute('''
                                 UPDATE materials SET purchase_price = %s, selling_price = %s
                                 WHERE id = %s
-                                ''', (purchase_price, selling_price, existing_material['id']))
+                                ''', (purchase_price, selling_price, material_id))
                                 
                                 # 记录价格轨迹
                                 cursor.execute('''
                                 INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
                                 VALUES (%s, %s, %s, %s, 'auto')
-                                ''', (item_name, material or '默认', purchase_price, selling_price))
-                        else:
-                            # 创建新材质
+                                ''', (project_name, material, purchase_price, selling_price))
+                    elif not is_system_item and item_name:
+                        # 非系统项目：检查是否需要添加到项目管理
+                        # 检查项目是否已存在
+                        cursor.execute('''
+                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                        ''', (item_name,))
+                        project = cursor.fetchone()
+                        
+                        if not project:
+                            # 创建新项目
+                            cursor.execute('''
+                            INSERT INTO projects (name) VALUES (%s)
+                            ''', (item_name,))
+                            project_id = cursor.lastrowid
+                            
+                            # 创建材质
                             cursor.execute('''
                             INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
                             VALUES (%s, %s, %s, %s, %s, %s, 'sales')
                             ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                            
+                            # 记录价格轨迹
+                            cursor.execute('''
+                            INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                            VALUES (%s, %s, %s, %s, 'auto')
+                            ''', (item_name, material or '默认', purchase_price, selling_price))
+                        else:
+                            project_id = project['id']
+                            
+                            # 检查材质是否已存在
+                            cursor.execute('''
+                            SELECT id, purchase_price, selling_price FROM materials 
+                            WHERE project_id = %s AND material = %s AND is_deleted = 0
+                            ''', (project_id, material or '默认'))
+                            existing_material = cursor.fetchone()
+                            
+                            if existing_material:
+                                # 更新价格
+                                if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                                    cursor.execute('''
+                                    UPDATE materials SET purchase_price = %s, selling_price = %s
+                                    WHERE id = %s
+                                    ''', (purchase_price, selling_price, existing_material['id']))
+                                    
+                                    # 记录价格轨迹
+                                    cursor.execute('''
+                                    INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                                    VALUES (%s, %s, %s, %s, 'auto')
+                                    ''', (item_name, material or '默认', purchase_price, selling_price))
+                            else:
+                                # 创建新材质
+                                cursor.execute('''
+                                INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                                VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                                ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
                 
                 # 插入销售项目明细
                 cursor.execute('''
@@ -1473,71 +1502,100 @@ def update_sales_record(sales_id):
             cursor.execute('DELETE FROM sales_items WHERE sales_id = %s', (sales_id,))
             
             # 处理每个项目
-            for item in items:
-                item_name = item.get('name', '').strip()
-                is_system_item = item.get('is_system_item', False)
-                item_id = item.get('item_id')
-                material = item.get('material', '')
-                purchase_price = item.get('purchase_price', 0)
-                selling_price = item.get('selling_price', 0)
-                quantity = item.get('quantity', 1)
-                item_note = item.get('note', '')
-                
-                # 如果不是系统项目，检查是否需要添加到项目管理
-                if not is_system_item and item_name:
-                    # 检查项目是否已存在
-                    cursor.execute('''
-                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                    ''', (item_name,))
-                    project = cursor.fetchone()
+                for item in items:
+                    item_name = item.get('name', '').strip()
+                    is_system_item = item.get('is_system_item', False)
+                    item_id = item.get('item_id')
+                    material = item.get('material', '')
+                    purchase_price = item.get('purchase_price', 0)
+                    selling_price = item.get('selling_price', 0)
+                    quantity = item.get('quantity', 1)
+                    item_note = item.get('note', '')
                     
-                    if not project:
-                        # 创建新项目
+                    if is_system_item and item_id:
+                        # 系统项目：更新价格和轨迹
                         cursor.execute('''
-                        INSERT INTO projects (name) VALUES (%s)
-                        ''', (item_name,))
-                        project_id = cursor.lastrowid
+                        SELECT m.id, m.purchase_price, m.selling_price, p.name as project_name
+                        FROM materials m
+                        JOIN projects p ON m.project_id = p.id
+                        WHERE m.id = %s AND m.is_deleted = 0 AND p.is_deleted = 0
+                        ''', (item_id,))
+                        material_info = cursor.fetchone()
                         
-                        # 创建材质
-                        cursor.execute('''
-                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
-                        VALUES (%s, %s, %s, %s, %s, %s, 'sales')
-                        ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
-                        
-                        # 记录价格轨迹
-                        cursor.execute('''
-                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
-                        VALUES (%s, %s, %s, %s, 'auto')
-                        ''', (item_name, material or '默认', purchase_price, selling_price))
-                    else:
-                        project_id = project['id']
-                        
-                        # 检查材质是否已存在
-                        cursor.execute('''
-                        SELECT id, purchase_price, selling_price FROM materials 
-                        WHERE project_id = %s AND material = %s AND is_deleted = 0
-                        ''', (project_id, material or '默认'))
-                        existing_material = cursor.fetchone()
-                        
-                        if existing_material:
-                            # 更新价格
-                            if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                        if material_info:
+                            material_id = material_info['id']
+                            current_purchase_price = material_info['purchase_price']
+                            current_selling_price = material_info['selling_price']
+                            project_name = material_info['project_name']
+                            
+                            # 检查价格是否发生变化
+                            if current_purchase_price != purchase_price or current_selling_price != selling_price:
+                                # 更新材质价格
                                 cursor.execute('''
                                 UPDATE materials SET purchase_price = %s, selling_price = %s
                                 WHERE id = %s
-                                ''', (purchase_price, selling_price, existing_material['id']))
+                                ''', (purchase_price, selling_price, material_id))
                                 
                                 # 记录价格轨迹
                                 cursor.execute('''
                                 INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
                                 VALUES (%s, %s, %s, %s, 'auto')
-                                ''', (item_name, material or '默认', purchase_price, selling_price))
-                        else:
-                            # 创建新材质
+                                ''', (project_name, material, purchase_price, selling_price))
+                    elif not is_system_item and item_name:
+                        # 非系统项目：检查是否需要添加到项目管理
+                        # 检查项目是否已存在
+                        cursor.execute('''
+                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                        ''', (item_name,))
+                        project = cursor.fetchone()
+                        
+                        if not project:
+                            # 创建新项目
+                            cursor.execute('''
+                            INSERT INTO projects (name) VALUES (%s)
+                            ''', (item_name,))
+                            project_id = cursor.lastrowid
+                            
+                            # 创建材质
                             cursor.execute('''
                             INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
                             VALUES (%s, %s, %s, %s, %s, %s, 'sales')
                             ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
+                            
+                            # 记录价格轨迹
+                            cursor.execute('''
+                            INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                            VALUES (%s, %s, %s, %s, 'auto')
+                            ''', (item_name, material or '默认', purchase_price, selling_price))
+                        else:
+                            project_id = project['id']
+                            
+                            # 检查材质是否已存在
+                            cursor.execute('''
+                            SELECT id, purchase_price, selling_price FROM materials 
+                            WHERE project_id = %s AND material = %s AND is_deleted = 0
+                            ''', (project_id, material or '默认'))
+                            existing_material = cursor.fetchone()
+                            
+                            if existing_material:
+                                # 更新价格
+                                if existing_material['purchase_price'] != purchase_price or existing_material['selling_price'] != selling_price:
+                                    cursor.execute('''
+                                    UPDATE materials SET purchase_price = %s, selling_price = %s
+                                    WHERE id = %s
+                                    ''', (purchase_price, selling_price, existing_material['id']))
+                                    
+                                    # 记录价格轨迹
+                                    cursor.execute('''
+                                    INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                                    VALUES (%s, %s, %s, %s, 'auto')
+                                    ''', (item_name, material or '默认', purchase_price, selling_price))
+                            else:
+                                # 创建新材质
+                                cursor.execute('''
+                                INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                                VALUES (%s, %s, %s, %s, %s, %s, 'sales')
+                                ''', (project_id, material or '默认', purchase_price, selling_price, quantity, item_note))
                 
                 # 插入销售项目明细
                 cursor.execute('''
