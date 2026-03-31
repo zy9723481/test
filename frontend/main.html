@@ -692,7 +692,7 @@
         // API基础URL配置 - 可手动切换
         // 本地开发使用: 'http://localhost:5000'
         // 服务器使用: 'http://101.42.35.88:5000'
-        const API_BASE_URL = 'http://101.42.35.88:5000';
+        const API_BASE_URL = 'http://localhost:5000';
         
         // 根据URL参数切换页签
         function switchTabByUrl() {
@@ -734,7 +734,7 @@
         // 更新页签显示数量
         function updateTabCounts() {
             // 获取项目数量
-            fetch(`${API_BASE_URL}/api/items`)
+            fetch(`${API_BASE_URL}/api/projects`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -1112,6 +1112,166 @@
             }
         };
         
+        // 价格轨迹模态框
+        function createPriceHistoryModal() {
+            // 检查是否已存在模态框
+            let modal = document.getElementById('price-history-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'price-history-modal';
+                modal.className = 'modal';
+                modal.style.display = 'none';
+                modal.style.position = 'fixed';
+                modal.style.zIndex = '2000';
+                modal.style.left = '0';
+                modal.style.top = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                modal.style.backdropFilter = 'blur(3px)';
+                
+                const modalContent = document.createElement('div');
+                modalContent.className = 'modal-content';
+                modalContent.style.backgroundColor = 'white';
+                modalContent.style.margin = '5% auto';
+                modalContent.style.padding = '2rem';
+                modalContent.style.borderRadius = '8px';
+                modalContent.style.width = '90%';
+                modalContent.style.maxWidth = '800px';
+                modalContent.style.maxHeight = '80vh';
+                modalContent.style.overflowY = 'auto';
+                modalContent.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+                
+                const modalHeader = document.createElement('div');
+                modalHeader.className = 'modal-header';
+                modalHeader.style.display = 'flex';
+                modalHeader.style.justifyContent = 'space-between';
+                modalHeader.style.alignItems = 'center';
+                modalHeader.style.marginBottom = '1.5rem';
+                modalHeader.style.paddingBottom = '1rem';
+                modalHeader.style.borderBottom = '1px solid #e0e0e0';
+                
+                const modalTitle = document.createElement('h2');
+                modalTitle.className = 'modal-title';
+                modalTitle.style.fontSize = '1.2rem';
+                modalTitle.style.fontWeight = 'bold';
+                modalTitle.style.color = '#333';
+                modalTitle.textContent = '价格轨迹';
+                
+                const closeButton = document.createElement('button');
+                closeButton.className = 'close-button';
+                closeButton.style.background = 'none';
+                closeButton.style.border = 'none';
+                closeButton.style.fontSize = '1.5rem';
+                closeButton.style.cursor = 'pointer';
+                closeButton.style.color = '#666';
+                closeButton.innerHTML = '&times;';
+                closeButton.onclick = function() {
+                    modal.style.display = 'none';
+                };
+                
+                modalHeader.appendChild(modalTitle);
+                modalHeader.appendChild(closeButton);
+                
+                const modalBody = document.createElement('div');
+                modalBody.id = 'price-history-body';
+                modalBody.style.marginBottom = '1.5rem';
+                
+                const modalFooter = document.createElement('div');
+                modalFooter.className = 'modal-footer';
+                modalFooter.style.display = 'flex';
+                modalFooter.style.justifyContent = 'flex-end';
+                modalFooter.style.marginTop = '2rem';
+                modalFooter.style.paddingTop = '1rem';
+                modalFooter.style.borderTop = '1px solid #e0e0e0';
+                
+                const closeButtonFooter = document.createElement('button');
+                closeButtonFooter.style.padding = '0.6rem 1.2rem';
+                closeButtonFooter.style.border = 'none';
+                closeButtonFooter.style.borderRadius = '4px';
+                closeButtonFooter.style.fontSize = '0.9rem';
+                closeButtonFooter.style.cursor = 'pointer';
+                closeButtonFooter.style.backgroundColor = '#2196F3';
+                closeButtonFooter.style.color = 'white';
+                closeButtonFooter.textContent = '关闭';
+                closeButtonFooter.onclick = function() {
+                    modal.style.display = 'none';
+                };
+                
+                modalFooter.appendChild(closeButtonFooter);
+                modalContent.appendChild(modalHeader);
+                modalContent.appendChild(modalBody);
+                modalContent.appendChild(modalFooter);
+                modal.appendChild(modalContent);
+                document.body.appendChild(modal);
+            }
+            return modal;
+        }
+        
+        // 查看价格轨迹
+        function viewPriceHistory(projectName, material) {
+            const modal = createPriceHistoryModal();
+            const modalBody = document.getElementById('price-history-body');
+            const modalTitle = modal.querySelector('.modal-title');
+            
+            modalTitle.textContent = `价格轨迹 - ${projectName} - ${material}`;
+            modalBody.innerHTML = '<p style="text-align: center; padding: 2rem; color: #999;">加载中...</p>';
+            
+            fetch(`${API_BASE_URL}/api/price-history?project_name=${encodeURIComponent(projectName)}&material=${encodeURIComponent(material)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const history = data.data;
+                        if (history.length === 0) {
+                            modalBody.innerHTML = '<p style="text-align: center; padding: 2rem; color: #999;">暂无价格轨迹记录</p>';
+                        } else {
+                            let html = `
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                                                <th style="padding: 0.8rem; text-align: left; border-bottom: 1px solid #e0e0e0;">序号</th>
+                                                <th style="padding: 0.8rem; text-align: left; border-bottom: 1px solid #e0e0e0;">进价</th>
+                                                <th style="padding: 0.8rem; text-align: left; border-bottom: 1px solid #e0e0e0;">销售价</th>
+                                                <th style="padding: 0.8rem; text-align: left; border-bottom: 1px solid #e0e0e0;">更新时间</th>
+                                                <th style="padding: 0.8rem; text-align: left; border-bottom: 1px solid #e0e0e0;">更新方式</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            `;
+                            
+                            history.forEach((item, index) => {
+                                const updateMethod = item.update_method === 'manual' ? '手动' : '自动';
+                                html += `
+                                    <tr style="border-bottom: 1px solid #e0e0e0;">
+                                        <td style="padding: 0.8rem;">${index + 1}</td>
+                                        <td style="padding: 0.8rem;">¥${parseFloat(item.purchase_price).toFixed(2)}</td>
+                                        <td style="padding: 0.8rem;">¥${parseFloat(item.selling_price).toFixed(2)}</td>
+                                        <td style="padding: 0.8rem;">${new Date(item.update_time).toLocaleString()}</td>
+                                        <td style="padding: 0.8rem;">${updateMethod}</td>
+                                    </tr>
+                                `;
+                            });
+                            
+                            html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                            modalBody.innerHTML = html;
+                        }
+                    } else {
+                        modalBody.innerHTML = `<p style="text-align: center; padding: 2rem; color: #f44336;">加载失败: ${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    modalBody.innerHTML = '<p style="text-align: center; padding: 2rem; color: #f44336;">网络错误，请重试</p>';
+                    console.error('Error:', error);
+                });
+            
+            modal.style.display = 'block';
+        }
+        
         // 删除订单
         function deleteOrder(orderId) {
             createConfirmModal(
@@ -1161,7 +1321,7 @@
         });
         
         // AI助手功能
-        const DEEPSEEK_API_KEY = "sk-6c9c8be9abfb4db58381c35abf602e8d";
+        const DEEPSEEK_API_KEY = "YOUR_DEEPSEEK_API_KEY";
         const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
         const DEEPSEEK_MODEL = "deepseek-chat";
         
@@ -1380,8 +1540,9 @@
                 project.materials.forEach(material => {
                     materialsHtml += `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <strong>${material.material}</strong> - 销售价: ¥${parseFloat(material.selling_price).toFixed(2)}
+                                <button onclick="viewPriceHistory('${project.name}', '${material.material}')" style="padding: 0.2rem 0.4rem; font-size: 0.7rem; background-color: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">轨迹</button>
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
                                 <button onclick="editMaterial(${material.id}, ${project.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">编辑</button>

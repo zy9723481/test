@@ -547,7 +547,7 @@
         // API基础URL配置 - 可手动切换
         // 本地开发使用: 'http://localhost:5000'
         // 服务器使用: 'http://101.42.35.88:5000'
-        const API_BASE_URL = 'http://101.42.35.88:5000';
+        const API_BASE_URL = 'http://localhost:5000';
         
         let allProjects = [];
         let orderItems = [];
@@ -582,10 +582,13 @@
                     <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
                 </div>
                 <div class="order-item-row">
-                    <div class="item-name-wrapper" style="flex: 1; position: relative; height: 40px;">
+                    <div class="item-name-wrapper" style="flex: 1; position: relative; height: 80px;">
                         <input type="text" class="item-name" data-index="${itemIndex}" placeholder="项目名称 *" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; box-sizing: border-box;">
-                        <select class="item-select" data-index="${itemIndex}" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
-                        </select>
+                        <div class="system-item-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%;">
+                            <input type="text" class="item-search" data-index="${itemIndex}" placeholder="搜索系统项目..." style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px 4px 0 0; font-size: 1rem; box-sizing: border-box; border-bottom: none;">
+                            <select class="item-select" data-index="${itemIndex}" style="width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 0 0 4px 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
+                            </select>
+                        </div>
                     </div>
                     <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" value="1" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
                 </div>
@@ -663,13 +666,33 @@
             defaultOption.textContent = '请选择系统项目';
             select.appendChild(defaultOption);
             
-            // 添加系统项目选项
+            // 添加系统项目选项（包含材质）
             allProjects.forEach(project => {
-                const option = document.createElement('option');
-                option.value = project.id;
-                option.setAttribute('data-name', project.name);
-                option.textContent = project.name;
-                select.appendChild(option);
+                if (project.materials && project.materials.length > 0) {
+                    project.materials.forEach(material => {
+                        const option = document.createElement('option');
+                        option.value = material.id;
+                        option.setAttribute('data-project-id', project.id);
+                        option.setAttribute('data-project-name', project.name);
+                        option.setAttribute('data-material', material.material);
+                        option.setAttribute('data-purchase-price', material.purchase_price);
+                        option.setAttribute('data-selling-price', material.selling_price);
+                        option.setAttribute('data-note', material.note || '');
+                        option.textContent = `${project.name}-${material.material}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = project.id;
+                    option.setAttribute('data-project-id', project.id);
+                    option.setAttribute('data-project-name', project.name);
+                    option.setAttribute('data-material', '');
+                    option.setAttribute('data-purchase-price', '0');
+                    option.setAttribute('data-selling-price', '0');
+                    option.setAttribute('data-note', '');
+                    option.textContent = project.name;
+                    select.appendChild(option);
+                }
             });
         }
         
@@ -696,17 +719,24 @@
             const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
             const checkbox = document.getElementById(`system-item-${index}`);
             const nameInput = itemDiv.querySelector('.item-name');
+            const systemItemContainer = itemDiv.querySelector('.system-item-container');
             const select = itemDiv.querySelector('.item-select');
+            const searchInput = itemDiv.querySelector('.item-search');
             const orderItem = orderItems.find(item => item.index === index);
             
             if (checkbox.checked) {
                 // 切换到系统项目模式
                 orderItem.isSystemItem = true;
                 nameInput.style.display = 'none';
-                select.style.display = 'block';
+                systemItemContainer.style.display = 'block';
                 
                 // 填充下拉框选项
                 fillSystemItemOptions(select);
+                
+                // 添加搜索功能
+                searchInput.addEventListener('input', function() {
+                    filterSystemItems(this, select);
+                });
                 
                 // 清空已录入的内容
                 clearItemFields(index);
@@ -714,7 +744,7 @@
                 // 切换到自定义模式
                 orderItem.isSystemItem = false;
                 nameInput.style.display = 'block';
-                select.style.display = 'none';
+                systemItemContainer.style.display = 'none';
                 select.value = '';
                 
                 // 清空系统项目数据
@@ -735,81 +765,66 @@
             }
         }
         
+        // 过滤系统项目
+        function filterSystemItems(searchInput, select) {
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = select.options;
+            
+            for (let i = 0; i < options.length; i++) {
+                const option = options[i];
+                const text = option.textContent.toLowerCase();
+                
+                if (text.includes(searchTerm) || i === 0) { // 始终显示默认选项
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        }
+        
         // 处理系统项目选择
         function handleSystemItemSelect(select, index) {
             const value = select.value;
             const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
             const orderItem = orderItems.find(item => item.index === index);
             
-            // 移除现有的材质选择下拉框
-            const existingMaterialSelect = itemDiv.querySelector('.material-select');
-            if (existingMaterialSelect) {
-                existingMaterialSelect.remove();
-            }
-            
             if (value) {
-                const projectId = parseInt(value);
-                const selectedProject = allProjects.find(project => project.id === projectId);
+                const selectedOption = select.options[select.selectedIndex];
+                const projectName = selectedOption.getAttribute('data-project-name');
+                const material = selectedOption.getAttribute('data-material');
+                const purchasePrice = selectedOption.getAttribute('data-purchase-price');
+                const sellingPrice = selectedOption.getAttribute('data-selling-price');
+                const note = selectedOption.getAttribute('data-note');
                 
-                if (selectedProject) {
-                    orderItem.name = selectedProject.name;
-                    
-                    // 填充项目名称
-                    itemDiv.querySelector('.item-name').value = selectedProject.name;
-                    
-                    // 如果有材质，显示材质选择下拉框
-                    if (selectedProject.materials && selectedProject.materials.length > 0) {
-                        // 创建材质选择下拉框
-                        const materialSelect = document.createElement('select');
-                        materialSelect.className = 'material-select';
-                        materialSelect.style.marginTop = '0.5rem';
-                        materialSelect.style.width = '100%';
-                        materialSelect.style.padding = '0.5rem';
-                        materialSelect.style.border = '1px solid #ddd';
-                        materialSelect.style.borderRadius = '4px';
-                        
-                        // 添加材质选项
-                        selectedProject.materials.forEach((material, idx) => {
-                            const option = document.createElement('option');
-                            option.value = material.id;
-                            option.setAttribute('data-purchase-price', material.purchase_price);
-                            option.setAttribute('data-selling-price', material.selling_price);
-                            option.setAttribute('data-note', material.note || '');
-                            option.textContent = material.material;
-                            materialSelect.appendChild(option);
-                        });
-                        
-                        // 添加到页面
-                        const itemFields = itemDiv.querySelector(`#item-fields-${index}`);
-                        const materialField = itemFields.querySelector('.item-fields-row:first-child');
-                        materialField.appendChild(materialSelect);
-                        
-                        // 处理材质选择
-                        materialSelect.addEventListener('change', function() {
-                            handleMaterialSelect(this, index, selectedProject);
-                        });
-                        
-                        // 默认选择第一个材质
-                        if (materialSelect.options.length > 0) {
-                            materialSelect.selectedIndex = 0;
-                            handleMaterialSelect(materialSelect, index, selectedProject);
-                        }
-                    } else {
-                        // 没有材质时的处理
-                        orderItem.item_id = null;
-                        orderItem.material = '';
-                        orderItem.purchase_price = 0;
-                        orderItem.selling_price = 0;
-                        orderItem.note = '';
-                        orderItem.price = 0;
-                        
-                        // 填充字段
-                        itemDiv.querySelector('.item-material').value = '';
-                        itemDiv.querySelector('.item-purchase-price').value = '';
-                        itemDiv.querySelector('.item-selling-price').value = '';
-                        itemDiv.querySelector('.item-note').value = '';
-                    }
-                }
+                orderItem.name = projectName;
+                orderItem.item_id = parseInt(value);
+                orderItem.material = material;
+                orderItem.purchase_price = parseFloat(purchasePrice) || 0;
+                orderItem.selling_price = parseFloat(sellingPrice) || 0;
+                orderItem.note = note;
+                orderItem.price = parseFloat(sellingPrice) || 0;
+                
+                // 填充字段
+                itemDiv.querySelector('.item-name').value = projectName;
+                itemDiv.querySelector('.item-material').value = material;
+                itemDiv.querySelector('.item-purchase-price').value = purchasePrice;
+                itemDiv.querySelector('.item-selling-price').value = sellingPrice;
+                itemDiv.querySelector('.item-note').value = note;
+                
+                // 禁用不可编辑字段（材质、进价、备注）
+                itemDiv.querySelector('.item-material').disabled = true;
+                itemDiv.querySelector('.item-purchase-price').disabled = true;
+                itemDiv.querySelector('.item-note').disabled = true;
+                
+                // 销售价保持可编辑
+                itemDiv.querySelector('.item-selling-price').disabled = false;
+                
+                // 添加销售价变更监听
+                itemDiv.querySelector('.item-selling-price').onchange = function() {
+                    orderItem.selling_price = parseFloat(this.value) || 0;
+                    orderItem.price = parseFloat(this.value) || 0;
+                    updateTotalAmount();
+                };
             } else {
                 // 清空系统项目数据
                 orderItem.item_id = null;
@@ -973,10 +988,18 @@
             const orderNote = document.getElementById('order-note').value;
             const items = [];
             
+            // 验证客户名称
+            if (!customerName.trim()) {
+                showMessage('请填写客户名称', false);
+                document.getElementById('order-customer').focus();
+                return;
+            }
+            
             // 收集订单项目信息
-            orderItems.forEach(orderItem => {
+            for (let i = 0; i < orderItems.length; i++) {
+                const orderItem = orderItems[i];
                 const itemDiv = document.querySelector(`.order-item[data-index="${orderItem.index}"]`);
-                if (!itemDiv) return;
+                if (!itemDiv) continue;
                 
                 const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
                 orderItem.quantity = quantity;
@@ -989,8 +1012,34 @@
                 orderItem.note = itemDiv.querySelector('.item-note').value || '';
                 orderItem.price = orderItem.selling_price;
                 
-                if (!orderItem.name || !orderItem.purchase_price || !orderItem.selling_price) {
-                    showMessage('请填写完整的项目信息（项目名称、进价、销售价为必填）', false);
+                // 验证项目必填字段
+                if (!orderItem.name.trim()) {
+                    showMessage('请填写项目名称', false);
+                    itemDiv.querySelector('.item-name').focus();
+                    return;
+                }
+                
+                if (!orderItem.material.trim()) {
+                    showMessage('请填写材质', false);
+                    itemDiv.querySelector('.item-material').focus();
+                    return;
+                }
+                
+                if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
+                    showMessage('请填写有效的进价', false);
+                    itemDiv.querySelector('.item-purchase-price').focus();
+                    return;
+                }
+                
+                if (!quantity || quantity <= 0) {
+                    showMessage('请填写有效的数量', false);
+                    itemDiv.querySelector('.item-quantity').focus();
+                    return;
+                }
+                
+                if (!orderItem.selling_price || orderItem.selling_price <= 0) {
+                    showMessage('请填写有效的销售价', false);
+                    itemDiv.querySelector('.item-selling-price').focus();
                     return;
                 }
                 
@@ -1014,7 +1063,7 @@
                         price: orderItem.price
                     });
                 }
-            });
+            }
             
             if (items.length === 0) {
                 showMessage('请至少添加一个项目', false);
@@ -1041,18 +1090,10 @@
                 if (data.success) {
                     showMessage('订单创建成功');
                     
-                    // 检查是否有重复项目
-                    if (data.duplicate_items && data.duplicate_items.length > 0) {
-                        // 自动跳转到项目管理页面并搜索重复项目
-                        const firstDuplicate = data.duplicate_items[0];
-                        setTimeout(() => {
-                            window.location.href = `main.html?tab=items&search=${encodeURIComponent(firstDuplicate.name)}`;
-                        }, 1000);
-                    } else {
-                        setTimeout(() => {
-                            window.location.href = 'main.html?tab=orders';
-                        }, 1000);
-                    }
+                    // 无论是否有重复项目，都跳转到订单管理页面
+                    setTimeout(() => {
+                        window.location.href = 'main.html?tab=orders';
+                    }, 1000);
                 } else {
                     showMessage('创建失败: ' + data.message, false);
                 }

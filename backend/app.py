@@ -6,6 +6,34 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# 初始化数据库表结构
+def init_database():
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # 创建价格轨迹表
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS price_history (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                project_name VARCHAR(255) NOT NULL,
+                material VARCHAR(255) NOT NULL,
+                purchase_price DECIMAL(10,2) NOT NULL,
+                selling_price DECIMAL(10,2) NOT NULL,
+                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                update_method ENUM('manual', 'auto') NOT NULL,
+                INDEX idx_project_material (project_name, material)
+            )
+            ''')
+            connection.commit()
+            print('价格轨迹表初始化成功')
+    except Exception as e:
+        print(f'初始化数据库表失败: {e}')
+    finally:
+        connection.close()
+
+# 初始化数据库
+init_database()
+
 # ======================
 # 🔥 修复前端访问（相对路径，任何环境都能运行）
 # ======================
@@ -569,6 +597,30 @@ def add_order():
                             'name': existing_item['name'],
                             'material': existing_item['material']
                         })
+                        
+                        # 检查价格是否发生变化
+                        if (existing_item['purchase_price'] != item['purchase_price'] or 
+                            existing_item['selling_price'] != item['selling_price']):
+                            # 更新价格
+                            cursor.execute('''
+                            UPDATE items SET purchase_price = %s, selling_price = %s
+                            WHERE id = %s
+                            ''', (
+                                item['purchase_price'],
+                                item['selling_price'],
+                                item_id
+                            ))
+                            
+                            # 记录价格轨迹
+                            cursor.execute('''
+                            INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                            VALUES (%s, %s, %s, %s, 'auto')
+                            ''', (
+                                item['name'],
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price']
+                            ))
                     else:
                         # 添加到 items 表
                         cursor.execute('''
@@ -583,6 +635,17 @@ def add_order():
                             item.get('material')
                         ))
                         item_id = cursor.lastrowid
+                        
+                        # 记录初始价格轨迹
+                        cursor.execute('''
+                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                        VALUES (%s, %s, %s, %s, 'auto')
+                        ''', (
+                            item['name'],
+                            item.get('material', ''),
+                            item['purchase_price'],
+                            item['selling_price']
+                        ))
                     
                     processed_item = {
                         'item_id': item_id,
@@ -701,6 +764,62 @@ def update_order(order_id):
                     
                     existing_item = cursor.fetchone()
                     
+                    # 检查项目是否存在于项目管理系统中
+                    cursor.execute('''
+                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                    ''', (item['name'],))
+                    project = cursor.fetchone()
+                    
+                    if not project:
+                        try:
+                            # 创建新项目
+                            print(f"Creating project: {item['name']}")
+                            cursor.execute('''
+                            INSERT INTO projects (name)
+                            VALUES (%s)
+                            ''', (item['name'],))
+                            project_id = cursor.lastrowid
+                            print(f"Created project with id: {project_id}")
+                        except Exception as e:
+                            # 处理项目名称重复的情况
+                            print(f"Error creating project: {e}")
+                            # 重新查询项目
+                            cursor.execute('''
+                            SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                            ''', (item['name'],))
+                            project = cursor.fetchone()
+                            if project:
+                                project_id = project['id']
+                                print(f"Found existing project with id: {project_id}")
+                            else:
+                                # 如果仍然不存在，使用默认值
+                                project_id = 1
+                                print(f"Using default project id: {project_id}")
+                    else:
+                        project_id = project['id']
+                        print(f"Using existing project with id: {project_id}")
+                    
+                    # 检查材质是否存在
+                    cursor.execute('''
+                    SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+                    ''', (project_id, item.get('material', '')))
+                    material = cursor.fetchone()
+                    
+                    if not material:
+                        # 创建新材质
+                        cursor.execute('''
+                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ''', (
+                            project_id,
+                            item.get('material', ''),
+                            item['purchase_price'],
+                            item['selling_price'],
+                            item.get('stock', 0),
+                            item.get('note'),
+                            'order_edit'
+                        ))
+                    
                     if existing_item:
                         item_id = existing_item['id']
                         duplicate_items.append({
@@ -708,63 +827,31 @@ def update_order(order_id):
                             'name': existing_item['name'],
                             'material': existing_item['material']
                         })
-                    else:
-                        # 检查项目是否存在于项目管理系统中
-                        cursor.execute('''
-                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                        ''', (item['name'],))
-                        project = cursor.fetchone()
                         
-                        if not project:
-                            try:
-                                # 创建新项目
-                                print(f"Creating project: {item['name']}")
-                                cursor.execute('''
-                                INSERT INTO projects (name)
-                                VALUES (%s)
-                                ''', (item['name'],))
-                                project_id = cursor.lastrowid
-                                print(f"Created project with id: {project_id}")
-                            except Exception as e:
-                                # 处理项目名称重复的情况
-                                print(f"Error creating project: {e}")
-                                # 重新查询项目
-                                cursor.execute('''
-                                SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                                ''', (item['name'],))
-                                project = cursor.fetchone()
-                                if project:
-                                    project_id = project['id']
-                                    print(f"Found existing project with id: {project_id}")
-                                else:
-                                    # 如果仍然不存在，使用默认值
-                                    project_id = 1
-                                    print(f"Using default project id: {project_id}")
-                        else:
-                            project_id = project['id']
-                            print(f"Using existing project with id: {project_id}")
-                        
-                        # 检查材质是否存在
-                        cursor.execute('''
-                        SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
-                        ''', (project_id, item.get('material', '')))
-                        material = cursor.fetchone()
-                        
-                        if not material:
-                            # 创建新材质
+                        # 检查价格是否发生变化
+                        if (existing_item['purchase_price'] != item['purchase_price'] or 
+                            existing_item['selling_price'] != item['selling_price']):
+                            # 更新价格
                             cursor.execute('''
-                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            UPDATE items SET purchase_price = %s, selling_price = %s
+                            WHERE id = %s
                             ''', (
-                                project_id,
-                                item.get('material', ''),
                                 item['purchase_price'],
                                 item['selling_price'],
-                                item.get('stock', 0),
-                                item.get('note'),
-                                'order_edit'
+                                item_id
                             ))
-                        
+                            
+                            # 记录价格轨迹
+                            cursor.execute('''
+                            INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                            VALUES (%s, %s, %s, %s, 'auto')
+                            ''', (
+                                item['name'],
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price']
+                            ))
+                    else:
                         # 添加到 items 表
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
@@ -778,6 +865,17 @@ def update_order(order_id):
                             item.get('material')
                         ))
                         item_id = cursor.lastrowid
+                        
+                        # 记录初始价格轨迹
+                        cursor.execute('''
+                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                        VALUES (%s, %s, %s, %s, 'auto')
+                        ''', (
+                            item['name'],
+                            item.get('material', ''),
+                            item['purchase_price'],
+                            item['selling_price']
+                        ))
                     
                     processed_item = {
                         'id': item['id'],
@@ -825,6 +923,62 @@ def update_order(order_id):
                     
                     existing_item = cursor.fetchone()
                     
+                    # 检查项目是否存在于项目管理系统中
+                    cursor.execute('''
+                    SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                    ''', (item['name'],))
+                    project = cursor.fetchone()
+                    
+                    if not project:
+                        try:
+                            # 创建新项目
+                            print(f"Creating project: {item['name']}")
+                            cursor.execute('''
+                            INSERT INTO projects (name)
+                            VALUES (%s)
+                            ''', (item['name'],))
+                            project_id = cursor.lastrowid
+                            print(f"Created project with id: {project_id}")
+                        except Exception as e:
+                            # 处理项目名称重复的情况
+                            print(f"Error creating project: {e}")
+                            # 重新查询项目
+                            cursor.execute('''
+                            SELECT id FROM projects WHERE name = %s AND is_deleted = 0
+                            ''', (item['name'],))
+                            project = cursor.fetchone()
+                            if project:
+                                project_id = project['id']
+                                print(f"Found existing project with id: {project_id}")
+                            else:
+                                # 如果仍然不存在，使用默认值
+                                project_id = 1
+                                print(f"Using default project id: {project_id}")
+                    else:
+                        project_id = project['id']
+                        print(f"Using existing project with id: {project_id}")
+                    
+                    # 检查材质是否存在
+                    cursor.execute('''
+                    SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
+                    ''', (project_id, item.get('material', '')))
+                    material = cursor.fetchone()
+                    
+                    if not material:
+                        # 创建新材质
+                        cursor.execute('''
+                        INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        ''', (
+                            project_id,
+                            item.get('material', ''),
+                            item['purchase_price'],
+                            item['selling_price'],
+                            item.get('stock', 0),
+                            item.get('note'),
+                            'order_edit'
+                        ))
+                    
                     if existing_item:
                         item_id = existing_item['id']
                         duplicate_items.append({
@@ -832,63 +986,31 @@ def update_order(order_id):
                             'name': existing_item['name'],
                             'material': existing_item['material']
                         })
-                    else:
-                        # 检查项目是否存在于项目管理系统中
-                        cursor.execute('''
-                        SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                        ''', (item['name'],))
-                        project = cursor.fetchone()
                         
-                        if not project:
-                            try:
-                                # 创建新项目
-                                print(f"Creating project: {item['name']}")
-                                cursor.execute('''
-                                INSERT INTO projects (name)
-                                VALUES (%s)
-                                ''', (item['name'],))
-                                project_id = cursor.lastrowid
-                                print(f"Created project with id: {project_id}")
-                            except Exception as e:
-                                # 处理项目名称重复的情况
-                                print(f"Error creating project: {e}")
-                                # 重新查询项目
-                                cursor.execute('''
-                                SELECT id FROM projects WHERE name = %s AND is_deleted = 0
-                                ''', (item['name'],))
-                                project = cursor.fetchone()
-                                if project:
-                                    project_id = project['id']
-                                    print(f"Found existing project with id: {project_id}")
-                                else:
-                                    # 如果仍然不存在，使用默认值
-                                    project_id = 1
-                                    print(f"Using default project id: {project_id}")
-                        else:
-                            project_id = project['id']
-                            print(f"Using existing project with id: {project_id}")
-                        
-                        # 检查材质是否存在
-                        cursor.execute('''
-                        SELECT id FROM materials WHERE project_id = %s AND material = %s AND is_deleted = 0
-                        ''', (project_id, item.get('material', '')))
-                        material = cursor.fetchone()
-                        
-                        if not material:
-                            # 创建新材质
+                        # 检查价格是否发生变化
+                        if (existing_item['purchase_price'] != item['purchase_price'] or 
+                            existing_item['selling_price'] != item['selling_price']):
+                            # 更新价格
                             cursor.execute('''
-                            INSERT INTO materials (project_id, material, purchase_price, selling_price, stock, note, source)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            UPDATE items SET purchase_price = %s, selling_price = %s
+                            WHERE id = %s
                             ''', (
-                                project_id,
-                                item.get('material', ''),
                                 item['purchase_price'],
                                 item['selling_price'],
-                                item.get('stock', 0),
-                                item.get('note'),
-                                'order_edit'
+                                item_id
                             ))
-                        
+                            
+                            # 记录价格轨迹
+                            cursor.execute('''
+                            INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                            VALUES (%s, %s, %s, %s, 'auto')
+                            ''', (
+                                item['name'],
+                                item.get('material', ''),
+                                item['purchase_price'],
+                                item['selling_price']
+                            ))
+                    else:
                         # 添加到 items 表
                         cursor.execute('''
                         INSERT INTO items (name, purchase_price, selling_price, stock, note, material, source)
@@ -902,6 +1024,17 @@ def update_order(order_id):
                             item.get('material')
                         ))
                         item_id = cursor.lastrowid
+                        
+                        # 记录初始价格轨迹
+                        cursor.execute('''
+                        INSERT INTO price_history (project_name, material, purchase_price, selling_price, update_method)
+                        VALUES (%s, %s, %s, %s, 'auto')
+                        ''', (
+                            item['name'],
+                            item.get('material', ''),
+                            item['purchase_price'],
+                            item['selling_price']
+                        ))
                     
                     processed_item = {
                         'item_id': item_id,
@@ -1017,6 +1150,29 @@ def delete_order(order_id):
             cursor.execute('DELETE FROM orders WHERE id = %s', (order_id,))
             connection.commit()
             return jsonify({'success': True, 'message': '订单删除成功'})
+    finally:
+        connection.close()
+
+# 获取价格轨迹
+@app.route('/api/price-history', methods=['GET'])
+def get_price_history():
+    project_name = request.args.get('project_name')
+    material = request.args.get('material')
+    
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            if project_name and material:
+                cursor.execute('''
+                SELECT * FROM price_history 
+                WHERE project_name = %s AND material = %s 
+                ORDER BY update_time DESC
+                ''', (project_name, material))
+            else:
+                return jsonify({'success': False, 'message': '缺少项目名称或材质参数'})
+            
+            history = cursor.fetchall()
+            return jsonify({'success': True, 'data': history})
     finally:
         connection.close()
 

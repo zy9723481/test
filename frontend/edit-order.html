@@ -576,7 +576,7 @@
         // API基础URL配置 - 可手动切换
         // 本地开发使用: 'http://localhost:5000'
         // 服务器使用: 'http://101.42.35.88:5000'
-        const API_BASE_URL = 'http://101.42.35.88:5000';
+        const API_BASE_URL = 'http://localhost:5000';
         
         let allProjects = [];
         let orderItems = [];
@@ -1277,6 +1277,7 @@
                 updateTotalAmount();
             };
             
+            // 更新总金额
             updateTotalAmount();
         }
         
@@ -1368,15 +1369,23 @@
             const itemsToDelete = [];
             const itemsToAdd = [];
             
+            // 验证客户名称
+            if (!customerName.trim()) {
+                showMessage('请填写客户名称', false);
+                document.getElementById('order-customer').focus();
+                return;
+            }
+            
             // 收集订单项目信息
-            orderItems.forEach(orderItem => {
+            for (let i = 0; i < orderItems.length; i++) {
+                const orderItem = orderItems[i];
                 if (orderItem.is_deleted && orderItem.id) {
                     itemsToDelete.push({
                         id: orderItem.id
                     });
                 } else if (!orderItem.is_deleted) {
                     const itemDiv = document.querySelector(`.order-item[data-index="${orderItem.index}"]`);
-                    if (!itemDiv) return;
+                    if (!itemDiv) continue;
                     
                     const quantity = parseInt(itemDiv.querySelector('.item-quantity').value) || 0;
                     
@@ -1389,8 +1398,34 @@
                     orderItem.price = orderItem.selling_price;
                     orderItem.quantity = quantity;
                     
-                    if (!orderItem.name || !orderItem.purchase_price || !orderItem.selling_price) {
-                        showMessage('请填写完整的项目信息（项目名称、进价、销售价为必填）', false);
+                    // 验证项目必填字段
+                    if (!orderItem.name.trim()) {
+                        showMessage('请填写项目名称', false);
+                        itemDiv.querySelector('.item-name').focus();
+                        return;
+                    }
+                    
+                    if (!orderItem.material.trim()) {
+                        showMessage('请填写材质', false);
+                        itemDiv.querySelector('.item-material').focus();
+                        return;
+                    }
+                    
+                    if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
+                        showMessage('请填写有效的进价', false);
+                        itemDiv.querySelector('.item-purchase-price').focus();
+                        return;
+                    }
+                    
+                    if (!quantity || quantity <= 0) {
+                        showMessage('请填写有效的数量', false);
+                        itemDiv.querySelector('.item-quantity').focus();
+                        return;
+                    }
+                    
+                    if (!orderItem.selling_price || orderItem.selling_price <= 0) {
+                        showMessage('请填写有效的销售价', false);
+                        itemDiv.querySelector('.item-selling-price').focus();
                         return;
                     }
                     
@@ -1416,7 +1451,7 @@
                         itemsToAdd.push(itemData);
                     }
                 }
-            });
+            }
             
             const orderData = {
                 customer_name: customerName,
@@ -1440,18 +1475,10 @@
                 if (data.success) {
                     showMessage('订单更新成功');
                     
-                    // 检查是否有重复项目
-                    if (data.duplicate_items && data.duplicate_items.length > 0) {
-                        // 自动跳转到项目管理页面并搜索重复项目
-                        const firstDuplicate = data.duplicate_items[0];
-                        setTimeout(() => {
-                            window.location.href = `main.html?tab=items&search=${encodeURIComponent(firstDuplicate.name)}`;
-                        }, 1000);
-                    } else {
-                        setTimeout(() => {
-                            window.location.href = 'main.html?tab=orders';
-                        }, 1000);
-                    }
+                    // 无论是否有重复项目，都跳转到订单管理页面
+                    setTimeout(() => {
+                        window.location.href = 'main.html?tab=orders';
+                    }, 1000);
                 } else {
                     showMessage('更新失败: ' + data.message, false);
                 }
