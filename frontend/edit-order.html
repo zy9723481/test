@@ -87,7 +87,7 @@
         .order-item-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             margin-bottom: 0.5rem;
         }
         
@@ -96,17 +96,19 @@
             color: #333;
         }
         
-        .system-item-checkbox {
+        .system-item-checkbox, .labor-fee-checkbox {
             display: flex;
             align-items: center;
             gap: 0.3rem;
         }
         
-        .system-item-checkbox input[type="checkbox"] {
+        .system-item-checkbox input[type="checkbox"],
+        .labor-fee-checkbox input[type="checkbox"] {
             width: auto;
         }
         
-        .system-item-checkbox label {
+        .system-item-checkbox label,
+        .labor-fee-checkbox label {
             font-size: 0.8rem;
             margin: 0;
             font-weight: normal;
@@ -651,11 +653,11 @@
                     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: 1;">
                         <span class="order-item-title">项目 ${itemIndex + 1}</span>
                         <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
-                            <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
-                                <input type="checkbox" id="labor-fee-${itemIndex}" ${isLaborFee ? 'checked' : ''} onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}" style="font-size: 0.9rem; color: #333;">人工费</label>
+                            <div class="labor-fee-checkbox">
+                                <input type="checkbox" id="labor-fee-${itemIndex}" ${isLaborFee ? 'checked' : ''} onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}">人工费</label>
                             </div>
-                            <div class="system-item-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
-                                <input type="checkbox" id="system-item-${itemIndex}" ${isSystemItem ? 'checked' : ''} onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}" style="font-size: 0.9rem; color: #333;">系统项目</label>
+                            <div class="system-item-checkbox">
+                                <input type="checkbox" id="system-item-${itemIndex}" ${isSystemItem ? 'checked' : ''} onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}">系统项目</label>
                             </div>
                         </div>
                     </div>
@@ -777,11 +779,11 @@
                     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: 1;">
                         <span class="order-item-title">项目 ${itemIndex + 1}</span>
                         <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
-                            <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
-                                <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}" style="font-size: 0.9rem; color: #333;">人工费</label>
+                            <div class="labor-fee-checkbox">
+                                <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}">人工费</label>
                             </div>
-                            <div class="system-item-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
-                                <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}" style="font-size: 0.9rem; color: #333;">系统项目</label>
+                            <div class="system-item-checkbox">
+                                <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}">系统项目</label>
                             </div>
                         </div>
                     </div>
