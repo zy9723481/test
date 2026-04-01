@@ -773,12 +773,19 @@
             itemDiv.dataset.index = itemIndex;
             
             itemDiv.innerHTML = `
-                <div class="order-item-header">
-                    <span class="order-item-title">项目 ${itemIndex + 1}</span>
-                    <div class="system-item-checkbox">
-                        <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})">
-                        <label for="system-item-${itemIndex}">系统项目</label>
+                <div class="order-item-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: 1;">
+                        <span class="order-item-title">项目 ${itemIndex + 1}</span>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
+                            <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
+                                <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}" style="font-size: 0.9rem; color: #333;">人工费</label>
+                            </div>
+                            <div class="system-item-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
+                                <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}" style="font-size: 0.9rem; color: #333;">系统项目</label>
+                            </div>
+                        </div>
                     </div>
+                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold; margin-left: 1rem;">×</div>
                 </div>
                 <div class="order-item-row">
                     <div class="item-name-wrapper" style="flex: 1; position: relative; height: 40px;">
@@ -786,8 +793,7 @@
                         <select class="item-select" data-index="${itemIndex}" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 40px; padding: 0 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; background-color: white; box-sizing: border-box;">
                         </select>
                     </div>
-                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '');" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
-                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
+                    <input type="number" class="item-quantity" data-index="${itemIndex}" placeholder="数量" min="1" step="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" style="height: 40px; padding: 0 0.8rem; box-sizing: border-box;">
                 </div>
                 <div class="item-fields" id="item-fields-${itemIndex}">
                     <div class="item-fields-row">
@@ -841,6 +847,7 @@
                 index: itemIndex,
                 id: null,
                 isSystemItem: false,
+                isLaborFee: false,
                 item_id: null,
                 name: '',
                 material: '',
