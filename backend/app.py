@@ -747,7 +747,9 @@ def add_order():
                             'selling_price': item['selling_price'],
                             'note': item.get('note', ''),
                             'quantity': item['quantity'],
-                            'price': item['price']
+                            'price': item['price'],
+                            'is_labor_fee': item.get('is_labor_fee', False),
+                            'is_system_item': item.get('is_system_item', False)
                         }
                         processed_items.append(processed_item)
                         continue
@@ -883,7 +885,9 @@ def add_order():
                             'selling_price': item['selling_price'],
                             'note': item.get('note'),
                             'quantity': item['quantity'],
-                            'price': item['price']
+                            'price': item['price'],
+                            'is_labor_fee': item.get('is_labor_fee', False),
+                            'is_system_item': item.get('is_system_item', False)
                         }
                         processed_items.append(processed_item)
                     else:
@@ -894,16 +898,18 @@ def add_order():
                         item_info = cursor.fetchone()
                         if item_info:
                             processed_item = {
-                                'item_id': item['item_id'],
-                                'name': item_info['name'],
-                                'material': item_info['material'],
-                                'purchase_price': item_info['purchase_price'],
-                                'selling_price': item_info['selling_price'],
-                                'note': item_info['note'],
-                                'quantity': item['quantity'],
-                                'price': item['price']
-                            }
-                            processed_items.append(processed_item)
+                            'item_id': item['item_id'],
+                            'name': item_info['name'],
+                            'material': item_info['material'],
+                            'purchase_price': item_info['purchase_price'],
+                            'selling_price': item_info['selling_price'],
+                            'note': item_info['note'],
+                            'quantity': item['quantity'],
+                            'price': item['price'],
+                            'is_labor_fee': item.get('is_labor_fee', False),
+                            'is_system_item': item.get('is_system_item', False)
+                        }
+                        processed_items.append(processed_item)
                 
                 # 计算总金额
                 total_amount = 0
@@ -926,12 +932,12 @@ def add_order():
                 # 添加订单项目
                 for item in processed_items:
                     cursor.execute('''
-                    INSERT INTO order_items (order_id, item_id, name, material, purchase_price, selling_price, note, quantity, price)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO order_items (order_id, item_id, name, material, purchase_price, selling_price, note, quantity, price, is_labor_fee, is_system_item)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (
                         order_id, item['item_id'], item['name'], item['material'],
                         item['purchase_price'], item['selling_price'], item['note'],
-                        item['quantity'], item['price']
+                        item['quantity'], item['price'], item.get('is_labor_fee', 0), item.get('is_system_item', 0)
                     ))
                 
                 # 提交所有事务

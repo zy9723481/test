@@ -645,8 +645,8 @@
             
             // 查找对应的系统项目
             const systemItem = allProjects.find(project => project.materials && project.materials.some(material => material.id === item.item_id));
-            const isSystemItem = !!systemItem;
-            const isLaborFee = item.name === '人工费';
+            const isSystemItem = item.is_system_item || !!systemItem;
+            const isLaborFee = item.is_labor_fee || false;
             
             itemDiv.innerHTML = `
                 <div class="order-item-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -1525,16 +1525,19 @@
                         return;
                     }
                     
-                    if (!orderItem.material.trim()) {
-                        showMessage('请填写材质', false);
-                        itemDiv.querySelector('.item-material').focus();
-                        return;
-                    }
-                    
-                    if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
-                        showMessage('请填写有效的进价', false);
-                        itemDiv.querySelector('.item-purchase-price').focus();
-                        return;
+                    // 人工费项目不需要验证材质和进价
+                    if (!orderItem.isLaborFee) {
+                        if (!orderItem.material.trim()) {
+                            showMessage('请填写材质', false);
+                            itemDiv.querySelector('.item-material').focus();
+                            return;
+                        }
+                        
+                        if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
+                            showMessage('请填写有效的进价', false);
+                            itemDiv.querySelector('.item-purchase-price').focus();
+                            return;
+                        }
                     }
                     
                     if (!quantity || quantity <= 0) {
@@ -1557,7 +1560,9 @@
                         stock: 0,
                         note: orderItem.note,
                         quantity: quantity,
-                        price: orderItem.price
+                        price: orderItem.price,
+                        is_labor_fee: orderItem.isLaborFee || false,
+                        is_system_item: orderItem.isSystemItem || false
                     };
                     
                     if (orderItem.isSystemItem && orderItem.item_id) {

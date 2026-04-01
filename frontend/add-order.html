@@ -1295,7 +1295,9 @@
                     items.push({
                         item_id: orderItem.item_id,
                         quantity: quantity,
-                        price: orderItem.price
+                        price: orderItem.price,
+                        is_labor_fee: orderItem.isLaborFee || false,
+                        is_system_item: orderItem.isSystemItem || true
                     });
                 } else {
                     // 自定义项目或人工费
@@ -1308,7 +1310,8 @@
                         note: orderItem.note,
                         quantity: quantity,
                         price: orderItem.price,
-                        is_labor_fee: orderItem.isLaborFee || false
+                        is_labor_fee: orderItem.isLaborFee || false,
+                        is_system_item: orderItem.isSystemItem || false
                     });
                 }
             }
