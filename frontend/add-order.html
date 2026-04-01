@@ -573,8 +573,11 @@
             
             itemDiv.innerHTML = `
                 <div class="order-item-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                         <span class="order-item-title">项目 ${itemIndex + 1}</span>
+                        <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
+                            <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}">人工费</label>
+                        </div>
                         <div class="system-item-checkbox">
                             <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}">系统项目</label>
                         </div>
@@ -642,6 +645,7 @@
             orderItems.push({
                 index: itemIndex,
                 isSystemItem: false,
+                isLaborFee: false,
                 item_id: null,
                 name: '',
                 material: '',
@@ -653,6 +657,86 @@
             });
             
             itemIndex++;
+        }
+        
+        // 切换人工费模式
+        function toggleLaborFee(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const laborCheckbox = document.getElementById(`labor-fee-${index}`);
+            const systemCheckbox = document.getElementById(`system-item-${index}`);
+            const nameInput = itemDiv.querySelector('.item-name');
+            const itemFields = itemDiv.querySelector(`#item-fields-${index}`);
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            if (laborCheckbox.checked) {
+                // 设置为人工费模式
+                orderItem.isLaborFee = true;
+                orderItem.name = '人工费';
+                orderItem.material = '';
+                orderItem.purchase_price = 0;
+                
+                // 自动填充名称
+                nameInput.value = '人工费';
+                nameInput.readOnly = true;
+                
+                // 隐藏材质和进价字段
+                if (itemFields) {
+                    const materialField = itemFields.querySelector('.item-material');
+                    const purchasePriceField = itemFields.querySelector('.item-purchase-price');
+                    const materialLabel = itemFields.querySelector('.field-label');
+                    
+                    if (materialField) {
+                        materialField.parentElement.style.display = 'none';
+                    }
+                    if (purchasePriceField) {
+                        purchasePriceField.parentElement.style.display = 'none';
+                    }
+                }
+                
+                // 禁用系统项目复选框
+                systemCheckbox.disabled = true;
+                systemCheckbox.checked = false;
+                
+                // 如果之前有系统项目的下拉框，移除它
+                const searchDropdown = itemDiv.querySelector('.searchable-dropdown');
+                if (searchDropdown) {
+                    searchDropdown.remove();
+                }
+                
+                // 显示普通输入框
+                nameInput.style.display = 'block';
+                const systemItemContainer = itemDiv.querySelector('.system-item-container');
+                if (systemItemContainer) {
+                    systemItemContainer.style.display = 'none';
+                }
+                
+            } else {
+                // 取消人工费模式
+                orderItem.isLaborFee = false;
+                orderItem.name = '';
+                
+                // 恢复名称输入框
+                nameInput.value = '';
+                nameInput.readOnly = false;
+                
+                // 显示材质和进价字段
+                if (itemFields) {
+                    const materialField = itemDiv.querySelector('.item-material');
+                    const purchasePriceField = itemDiv.querySelector('.item-purchase-price');
+                    
+                    if (materialField) {
+                        materialField.parentElement.style.display = 'block';
+                    }
+                    if (purchasePriceField) {
+                        purchasePriceField.parentElement.style.display = 'block';
+                    }
+                }
+                
+                // 启用系统项目复选框
+                systemCheckbox.disabled = false;
+            }
+            
+            updateTotalAmount();
         }
         
         // 清空项目录入内容
@@ -1118,16 +1202,19 @@
                     return;
                 }
                 
-                if (!orderItem.material.trim()) {
-                    showMessage('请填写材质', false);
-                    itemDiv.querySelector('.item-material').focus();
-                    return;
-                }
-                
-                if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
-                    showMessage('请填写有效的进价', false);
-                    itemDiv.querySelector('.item-purchase-price').focus();
-                    return;
+                // 人工费项目不需要验证材质和进价
+                if (!orderItem.isLaborFee) {
+                    if (!orderItem.material.trim()) {
+                        showMessage('请填写材质', false);
+                        itemDiv.querySelector('.item-material').focus();
+                        return;
+                    }
+                    
+                    if (!orderItem.purchase_price || orderItem.purchase_price <= 0) {
+                        showMessage('请填写有效的进价', false);
+                        itemDiv.querySelector('.item-purchase-price').focus();
+                        return;
+                    }
                 }
                 
                 if (!quantity || quantity <= 0) {
@@ -1150,7 +1237,7 @@
                         price: orderItem.price
                     });
                 } else {
-                    // 自定义项目
+                    // 自定义项目或人工费
                     items.push({
                         name: orderItem.name,
                         material: orderItem.material,
@@ -1159,7 +1246,8 @@
                         stock: 0,
                         note: orderItem.note,
                         quantity: quantity,
-                        price: orderItem.price
+                        price: orderItem.price,
+                        is_labor_fee: orderItem.isLaborFee || false
                     });
                 }
             }

@@ -736,6 +736,22 @@ def add_order():
                 logger.info(f"【订单】开始处理 {len(order_items)} 个订单项目")
                 
                 for item in order_items:
+                    # 跳过人工费项目，不添加到项目表
+                    if item.get('is_labor_fee'):
+                        logger.info(f"【订单】人工费项目，不添加到项目表: {item['name']}")
+                        processed_item = {
+                            'item_id': None,
+                            'name': item['name'],
+                            'material': item.get('material', ''),
+                            'purchase_price': item.get('purchase_price', 0),
+                            'selling_price': item['selling_price'],
+                            'note': item.get('note', ''),
+                            'quantity': item['quantity'],
+                            'price': item['price']
+                        }
+                        processed_items.append(processed_item)
+                        continue
+                    
                     if not item.get('item_id') and item.get('name'):
                         logger.info(f"【订单】处理非系统项目: {item['name']}")
                         # 检查项目是否存在
