@@ -573,16 +573,18 @@
             
             itemDiv.innerHTML = `
                 <div class="order-item-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; flex: 1;">
                         <span class="order-item-title">项目 ${itemIndex + 1}</span>
-                        <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
-                            <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}">人工费</label>
-                        </div>
-                        <div class="system-item-checkbox">
-                            <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}">系统项目</label>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
+                            <div class="labor-fee-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
+                                <input type="checkbox" id="labor-fee-${itemIndex}" onchange="toggleLaborFee(${itemIndex})"><label for="labor-fee-${itemIndex}" style="font-size: 0.9rem; color: #333;">人工费</label>
+                            </div>
+                            <div class="system-item-checkbox" style="display: flex; align-items: center; gap: 0.3rem;">
+                                <input type="checkbox" id="system-item-${itemIndex}" onchange="toggleSystemItem(${itemIndex})"><label for="system-item-${itemIndex}" style="font-size: 0.9rem; color: #333;">系统项目</label>
+                            </div>
                         </div>
                     </div>
-                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold;">×</div>
+                    <div class="remove-icon" onclick="removeOrderItem(${itemIndex})" title="删除项目" style="cursor: pointer; color: #f44336; font-size: 18px; font-weight: bold; margin-left: 1rem;">×</div>
                 </div>
                 <div class="order-item-row">
                     <div class="item-name-wrapper" style="flex: 1; position: relative;">
@@ -669,8 +671,16 @@
             const orderItem = orderItems.find(item => item.index === index);
             
             if (laborCheckbox.checked) {
+                // 互斥：取消系统项目勾选
+                systemCheckbox.checked = false;
+                systemCheckbox.disabled = true;
+                
+                // 清空卡片内容
+                clearItemFields(index);
+                
                 // 设置为人工费模式
                 orderItem.isLaborFee = true;
+                orderItem.isSystemItem = false;
                 orderItem.name = '人工费';
                 orderItem.material = '';
                 orderItem.purchase_price = 0;
@@ -683,7 +693,6 @@
                 if (itemFields) {
                     const materialField = itemFields.querySelector('.item-material');
                     const purchasePriceField = itemFields.querySelector('.item-purchase-price');
-                    const materialLabel = itemFields.querySelector('.field-label');
                     
                     if (materialField) {
                         materialField.parentElement.style.display = 'none';
@@ -692,10 +701,6 @@
                         purchasePriceField.parentElement.style.display = 'none';
                     }
                 }
-                
-                // 禁用系统项目复选框
-                systemCheckbox.disabled = true;
-                systemCheckbox.checked = false;
                 
                 // 如果之前有系统项目的下拉框，移除它
                 const searchDropdown = itemDiv.querySelector('.searchable-dropdown');
@@ -737,6 +742,60 @@
             }
             
             updateTotalAmount();
+        }
+        
+        // 切换系统项目模式
+        function toggleSystemItem(index) {
+            const itemDiv = document.querySelector(`.order-item[data-index="${index}"]`);
+            const checkbox = document.getElementById(`system-item-${index}`);
+            const laborCheckbox = document.getElementById(`labor-fee-${index}`);
+            const nameInput = itemDiv.querySelector('.item-name');
+            const select = itemDiv.querySelector('.item-select');
+            const orderItem = orderItems.find(item => item.index === index);
+            
+            if (checkbox.checked) {
+                // 互斥：取消人工费勾选
+                laborCheckbox.checked = false;
+                laborCheckbox.disabled = true;
+                
+                // 清空卡片内容
+                clearItemFields(index);
+                
+                // 切换到系统项目模式
+                orderItem.isSystemItem = true;
+                orderItem.isLaborFee = false;
+                nameInput.style.display = 'none';
+                select.style.display = 'none'; // 隐藏原始select
+                
+                // 创建可搜索的下拉框组件
+                createSearchableDropdown(itemDiv, index, orderItem);
+            } else {
+                // 切换到自定义模式
+                orderItem.isSystemItem = false;
+                nameInput.style.display = 'block';
+                select.style.display = 'none';
+                select.value = '';
+                
+                // 移除搜索下拉框组件
+                const searchDropdown = itemDiv.querySelector('.searchable-dropdown');
+                if (searchDropdown) {
+                    searchDropdown.remove();
+                }
+                
+                // 清空系统项目数据
+                orderItem.item_id = null;
+                
+                // 清空已录入的内容
+                clearItemFields(index);
+                
+                // 启用所有字段
+                enableAllFields(index);
+                
+                // 启用人工费复选框
+                laborCheckbox.disabled = false;
+                
+                updateTotalAmount();
+            }
         }
         
         // 清空项目录入内容
